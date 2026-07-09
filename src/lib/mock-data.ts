@@ -15,7 +15,7 @@ export type Host = {
 const avatars = (seed: string) =>
   `https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(seed)}&backgroundType=gradientLinear`;
 
-export const hosts: Host[] = [
+export const hosts: Host[] = ([
   { id: "LV-0421", nickname: "Ana Vitória", category: "Beauty", status: "online", starHost: true, earnings: 12840, hours: 128, manager: "Rafael Costa", meta: 15000, progress: 86 },
   { id: "LV-0388", nickname: "João Mendes", category: "Gaming", status: "at-risk", starHost: false, earnings: 4210, hours: 62, manager: "Marina Alves", meta: 10000, progress: 42 },
   { id: "LV-0512", nickname: "Camila Rocha", category: "Dance", status: "online", starHost: true, earnings: 18490, hours: 154, manager: "Rafael Costa", meta: 20000, progress: 92 },
@@ -28,7 +28,7 @@ export const hosts: Host[] = [
   { id: "LV-0155", nickname: "Fernanda Reis", category: "Music", status: "offline", starHost: false, earnings: 1980, hours: 22, manager: "Rafael Costa", meta: 6000, progress: 33 },
   { id: "LV-0567", nickname: "Thiago Melo", category: "Talk", status: "online", starHost: true, earnings: 19870, hours: 166, manager: "Marina Alves", meta: 22000, progress: 90 },
   { id: "LV-0284", nickname: "Larissa Duarte", category: "Lifestyle", status: "online", starHost: false, earnings: 5410, hours: 71, manager: "Igor Martins", meta: 9000, progress: 60 },
-].map((h) => ({ ...h, avatar: avatars(h.nickname) }));
+] as Omit<Host, "avatar">[]).map((h) => ({ ...h, avatar: avatars(h.nickname) }));
 
 export const managers = [
   { name: "Rafael Costa", avatar: avatars("Rafael Costa"), hosts: 5, revenue: 42840, growth: 18.4, target: 50000 },
