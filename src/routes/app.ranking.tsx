@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { Card, PageHeader, currency } from "@/components/app-shell";
-import { hosts } from "@/lib/mock-data";
+import { useScopedHosts } from "@/lib/scoped-data";
+import { useAuth } from "@/lib/auth-context";
+import { cn } from "@/lib/utils";
 import { Trophy, Medal, Award, Crown, TrendingUp } from "lucide-react";
 
 export const Route = createFileRoute("/app/ranking")({
@@ -9,15 +12,42 @@ export const Route = createFileRoute("/app/ranking")({
 });
 
 function RankingPage() {
-  const sorted = [...hosts].sort((a,b)=>b.earnings-a.earnings);
+  const { user, currentAgency } = useAuth();
+  const hosts = useScopedHosts();
+  const [period, setPeriod] = useState<"week" | "month" | "quarter">("month");
+  const [cat, setCat] = useState<string>("Todas");
+  const cats = ["Todas", ...Array.from(new Set(hosts.map((h) => h.category)))];
+  const filtered = hosts.filter((h) => cat === "Todas" || h.category === cat);
+  const sorted = [...filtered].sort((a,b)=>b.earnings-a.earnings);
   const podium = sorted.slice(0,3);
   const rest = sorted.slice(3);
   const icons = [Crown, Trophy, Medal];
   const colors = ["from-yellow-400 to-amber-500", "from-slate-200 to-slate-400", "from-amber-600 to-amber-800"];
+  const periodLabel = period === "week" ? "Semana atual" : period === "month" ? "Novembro 2026" : "Q4 2026";
+  const myPos = user?.role === "host" ? sorted.findIndex((h) => h.nickname === user.name) + 1 : 0;
 
   return (
     <div>
-      <PageHeader title="Ranking" description="Competição mensal · Novembro 2026" />
+      <PageHeader
+        title="Ranking"
+        description={`${currentAgency?.name ?? "Agência"} · ${periodLabel}${myPos ? ` · Sua posição: #${myPos}` : ""}`}
+        actions={
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-card/60 p-1">
+            {(["week","month","quarter"] as const).map((p) => (
+              <button key={p} onClick={() => setPeriod(p)} className={cn("rounded-md px-2.5 py-1 text-xs font-medium transition", period === p ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground")}>
+                {p === "week" ? "Semana" : p === "month" ? "Mês" : "Trimestre"}
+              </button>
+            ))}
+          </div>
+        }
+      />
+
+      <div className="mb-4 flex flex-wrap items-center gap-1 rounded-lg border border-border bg-card/40 p-1">
+        {cats.map((c) => (
+          <button key={c} onClick={() => setCat(c)} className={cn("rounded-md px-2.5 py-1 text-xs font-medium transition", cat === c ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground")}>{c}</button>
+        ))}
+      </div>
+
 
       <div className="grid gap-4 md:grid-cols-3">
         {podium.map((h, i) => {
