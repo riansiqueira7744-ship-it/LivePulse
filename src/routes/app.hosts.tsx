@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, Filter, Plus, Star, MoreHorizontal, ArrowUpDown, Download } from "lucide-react";
 import { Card, PageHeader, currency } from "@/components/app-shell";
-import { hosts as allHosts, type Host } from "@/lib/mock-data";
+import { type Host } from "@/lib/mock-data";
+import { useScopedHosts } from "@/lib/scoped-data";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/hosts")({
@@ -20,6 +22,8 @@ const statusLabel: Record<Host["status"], string> = {
 };
 
 function HostsPage() {
+  const { can, user, currentAgency } = useAuth();
+  const allHosts = useScopedHosts();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("Todas");
   const cats = ["Todas", ...Array.from(new Set(allHosts.map((h) => h.category)))];
@@ -27,19 +31,25 @@ function HostsPage() {
     (cat === "Todas" || h.category === cat) &&
     (q === "" || h.nickname.toLowerCase().includes(q.toLowerCase()) || h.id.toLowerCase().includes(q.toLowerCase()))
   );
+  const scopeLabel = user?.role === "manager" ? `Seu time em ${currentAgency?.name ?? ""}` : user?.role === "host" ? "Seu perfil" : `${currentAgency?.name ?? "Agência"}`;
 
   return (
     <div>
       <PageHeader
         title="Hosts"
-        description={`${allHosts.length} cadastrados · ${allHosts.filter(h=>h.status==="online").length} online agora`}
+        description={`${scopeLabel} · ${allHosts.length} cadastrados · ${allHosts.filter(h=>h.status==="online").length} online`}
         actions={
           <>
-            <button className="rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs"><Download className="mr-1 inline h-3.5 w-3.5" /> Exportar</button>
-            <button className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"><Plus className="mr-1 inline h-3.5 w-3.5" /> Novo host</button>
+            {can("reports:export") && (
+              <button className="rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs"><Download className="mr-1 inline h-3.5 w-3.5" /> Exportar</button>
+            )}
+            {can("hosts:manage") && (
+              <button className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"><Plus className="mr-1 inline h-3.5 w-3.5" /> Novo host</button>
+            )}
           </>
         }
       />
+
 
       <Card>
         <div className="mb-4 flex flex-wrap items-center gap-2">

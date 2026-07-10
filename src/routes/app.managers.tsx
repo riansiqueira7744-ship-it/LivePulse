@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Card, PageHeader, currency } from "@/components/app-shell";
-import { managers } from "@/lib/mock-data";
-import { TrendingUp, TrendingDown, Users } from "lucide-react";
+import { useScopedManagers } from "@/lib/scoped-data";
+import { useAuth } from "@/lib/auth-context";
+import { TrendingUp, TrendingDown, Users, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/app/managers")({
   component: ManagersPage,
@@ -9,9 +10,19 @@ export const Route = createFileRoute("/app/managers")({
 });
 
 function ManagersPage() {
+  const { can, user, currentAgency } = useAuth();
+  const managers = useScopedManagers();
+  const desc = user?.role === "manager" ? "Seu resumo pessoal" : `${currentAgency?.name ?? "Agência"} · ${managers.length} gerentes`;
   return (
     <div>
-      <PageHeader title="Gerentes" description="Desempenho da liderança e times vinculados" />
+      <PageHeader
+        title="Gerentes"
+        description={desc}
+        actions={can("managers:manage") ? (
+          <button className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground"><Plus className="mr-1 inline h-3.5 w-3.5" /> Novo gerente</button>
+        ) : null}
+      />
+
       <div className="grid gap-4 md:grid-cols-2">
         {managers.map((m) => {
           const pct = Math.min(100, Math.round((m.revenue / m.target) * 100));

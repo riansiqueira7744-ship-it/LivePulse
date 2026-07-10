@@ -8,7 +8,9 @@ import {
   PieChart, Pie, Cell, BarChart, Bar,
 } from "recharts";
 import { Card, PageHeader, StatCard, currency } from "@/components/app-shell";
-import { hosts, revenueSeries, categorySplit, payments, alerts, activities } from "@/lib/mock-data";
+import { revenueSeries, categorySplit, payments, alerts, activities } from "@/lib/mock-data";
+import { useScopedHosts } from "@/lib/scoped-data";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/app/dashboard")({
   component: Dashboard,
@@ -24,26 +26,35 @@ const alertColors: Record<string, string> = {
 };
 
 function Dashboard() {
+  const { user, can, currentAgency } = useAuth();
+  const hosts = useScopedHosts();
   const topHosts = [...hosts].sort((a,b)=>b.earnings-a.earnings).slice(0,5);
+  const totalEarnings = hosts.reduce((s, h) => s + h.earnings, 0);
+  const activeCount = hosts.filter((h) => h.status === "online").length;
+  const avgProgress = hosts.length ? Math.round(hosts.reduce((s, h) => s + h.progress, 0) / hosts.length) : 0;
+  const scopeLabel = user?.role === "host" ? "Sua performance" : user?.role === "manager" ? `Seu time · ${hosts.length} hosts` : `${currentAgency?.name ?? "Agência"} · ${hosts.length} hosts`;
   return (
     <div>
       <PageHeader
         title="Dashboard"
-        description="Visão geral da agência · Novembro 2026"
+        description={`${scopeLabel} · Novembro 2026`}
         actions={
           <>
             <button className="hidden rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs md:block">Últimos 30 dias</button>
-            <button className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Exportar</button>
+            {can("reports:export") && (
+              <button className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Exportar</button>
+            )}
           </>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard gradient label="Receita do mês" value={currency(197840)} delta="+18.4%" deltaLabel="vs. mês anterior" positive icon={<Wallet className="h-4 w-4" />} />
-        <StatCard label="Lucro" value={currency(84210)} delta="+22.1%" deltaLabel="margem 42.6%" positive icon={<TrendingUp className="h-4 w-4" />} />
-        <StatCard label="Hosts ativos" value="48" delta="+3" deltaLabel="novos esta semana" positive icon={<Users className="h-4 w-4" />} />
-        <StatCard label="Meta mensal" value="78%" delta="12d" deltaLabel="para o fechamento" positive icon={<Target className="h-4 w-4" />} />
+        <StatCard gradient label={user?.role === "host" ? "Meus ganhos" : "Receita do mês"} value={currency(user?.role === "host" ? totalEarnings : 197840)} delta="+18.4%" deltaLabel="vs. mês anterior" positive icon={<Wallet className="h-4 w-4" />} />
+        <StatCard label={user?.role === "host" ? "Progresso" : "Lucro"} value={user?.role === "host" ? `${avgProgress}%` : currency(84210)} delta="+22.1%" deltaLabel={user?.role === "host" ? "meta pessoal" : "margem 42.6%"} positive icon={<TrendingUp className="h-4 w-4" />} />
+        <StatCard label={user?.role === "host" ? "Horas do mês" : "Hosts ativos"} value={user?.role === "host" ? `${hosts[0]?.hours ?? 0}h` : String(activeCount)} delta="+3" deltaLabel={user?.role === "host" ? "vs. semana" : "novos esta semana"} positive icon={<Users className="h-4 w-4" />} />
+        <StatCard label="Meta mensal" value={`${avgProgress || 78}%`} delta="12d" deltaLabel="para o fechamento" positive icon={<Target className="h-4 w-4" />} />
       </div>
+
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2" title="Receita vs. Despesa" action={<span className="text-xs text-muted-foreground">Diário · R$</span>}>

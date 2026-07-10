@@ -1,12 +1,26 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Card, PageHeader, StatCard, currency } from "@/components/app-shell";
 import { revenueSeries } from "@/lib/mock-data";
+import { useAuth } from "@/lib/auth-context";
 import { Wallet, TrendingUp, TrendingDown, PiggyBank, Download, ArrowUp, ArrowDown } from "lucide-react";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Line, LineChart } from "recharts";
 
 export const Route = createFileRoute("/app/finance")({
   component: FinancePage,
   head: () => ({ meta: [{ title: "Financeiro — Livepulse" }] }),
+  beforeLoad: () => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("livepulse.auth");
+      if (!raw) return;
+      const u = JSON.parse(raw);
+      if (u?.role === "host" || u?.role === "manager") {
+        throw redirect({ to: "/app/dashboard" });
+      }
+    } catch (e) {
+      if (e && typeof e === "object" && "to" in (e as object)) throw e;
+    }
+  },
 });
 
 const txs = [
@@ -19,14 +33,19 @@ const txs = [
   { id: "TX-1036", desc: "Equipamento streaming · Ring lights", type: "out", amount: 2380, date: "03/11", cat: "Equipamento" },
 ];
 
+
 function FinancePage() {
+  const { can, currentAgency } = useAuth();
   return (
     <div>
       <PageHeader
         title="Financeiro"
-        description="Fluxo de caixa em tempo real"
-        actions={<button className="rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs"><Download className="mr-1 inline h-3.5 w-3.5" /> Exportar CSV</button>}
+        description={`${currentAgency?.name ?? "Agência"} · Fluxo de caixa em tempo real`}
+        actions={can("reports:export") ? (
+          <button className="rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs"><Download className="mr-1 inline h-3.5 w-3.5" /> Exportar CSV</button>
+        ) : null}
       />
+
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard gradient label="Entradas" value={currency(197840)} delta="+18.4%" deltaLabel="mês" positive icon={<TrendingUp className="h-4 w-4" />} />
