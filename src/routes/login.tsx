@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Zap, Mail, Lock, ArrowRight, Github, Shield, UserCog, Radio } from "lucide-react";
+import { Zap, Mail, Lock, ArrowRight, Github, Shield, UserCog, Radio, Crown } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types";
@@ -10,21 +10,23 @@ export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — Livepulse" }] }),
 });
 
-const ROLES: { role: UserRole; label: string; icon: typeof Shield; desc: string }[] = [
-  { role: "admin",   label: "Administrador", icon: Shield,  desc: "Acesso total" },
-  { role: "manager", label: "Gerente",       icon: UserCog, desc: "Time e metas" },
-  { role: "host",    label: "Host",          icon: Radio,   desc: "Painel pessoal" },
+const ROLES: { role: UserRole; label: string; icon: typeof Shield; desc: string; email: string }[] = [
+  { role: "super_admin",  label: "Super Admin",     icon: Crown,   desc: "Dono Livepulse",    email: "founder@livepulse.io" },
+  { role: "agency_owner", label: "Dono Agência",    icon: Shield,  desc: "Controle total",    email: "carlos@livepulse.io" },
+  { role: "manager",      label: "Gerente",         icon: UserCog, desc: "Time e metas",      email: "rafael@livepulse.io" },
+  { role: "host",         label: "Host",            icon: Radio,   desc: "Painel pessoal",    email: "ana@livepulse.io" },
 ];
 
 function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
-  const [role, setRole] = useState<UserRole>("admin");
+  const [role, setRole] = useState<UserRole>("agency_owner");
+  const emailOf = ROLES.find((r) => r.role === role)!.email;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     signIn(role);
-    navigate({ to: "/app/dashboard" });
+    navigate({ to: role === "super_admin" ? "/app/dashboard" : "/app/dashboard" });
   };
 
   return (
@@ -54,7 +56,7 @@ function Login() {
               <label className="text-xs font-medium text-muted-foreground">E-mail</label>
               <div className="relative mt-1.5">
                 <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input defaultValue="carlos@livepulse.io" className="h-11 w-full rounded-xl border border-border bg-card/60 pl-10 pr-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                <input key={emailOf} defaultValue={emailOf} className="h-11 w-full rounded-xl border border-border bg-card/60 pl-10 pr-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
               </div>
             </div>
             <div>
@@ -70,7 +72,7 @@ function Login() {
 
             <div>
               <label className="text-xs font-medium text-muted-foreground">Entrar como (demo)</label>
-              <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+              <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
                 {ROLES.map(({ role: r, label, icon: Icon, desc }) => (
                   <button
                     key={r}
