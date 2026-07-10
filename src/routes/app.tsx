@@ -3,7 +3,7 @@ import { useState } from "react";
 import {
   LayoutDashboard, Users, UserCog, Wallet, Percent, Target, Trophy,
   Sparkles, FileBarChart, MessageSquare, Settings, User, Bell, Search,
-  ChevronLeft, ChevronRight, LogOut, Zap,
+  ChevronLeft, ChevronRight, LogOut, Zap, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
@@ -117,6 +117,24 @@ function AppLayout() {
               );
             })}
           </nav>
+
+          {user?.role === "super_admin" && (
+            <div className="border-t border-sidebar-border px-3 py-2">
+              {!collapsed && (
+                <div className="px-2 pb-1.5 pt-1 text-[10.5px] font-medium uppercase tracking-widest text-warning/80">
+                  Plataforma
+                </div>
+              )}
+              <Link
+                to="/admin/overview"
+                className="flex items-center gap-3 rounded-lg border border-warning/30 bg-warning/10 px-2.5 py-2 text-sm font-medium text-warning transition hover:bg-warning/15"
+              >
+                <Crown className="h-[18px] w-[18px] shrink-0" />
+                {!collapsed && <span className="flex-1 truncate">Super Admin</span>}
+              </Link>
+            </div>
+          )}
+
 
           <div className="space-y-0.5 border-t border-sidebar-border p-3">
             {bottomNav.map((item) => {
