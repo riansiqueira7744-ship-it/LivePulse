@@ -89,7 +89,7 @@ function AppLayout() {
                 Operação
               </div>
             )}
-            {nav.map((item) => {
+            {visibleNav.map((item) => {
               const active = path.startsWith(item.to);
               const Icon = item.icon;
               return (
@@ -138,15 +138,19 @@ function AppLayout() {
                 </Link>
               );
             })}
-            {!collapsed && (
+            {!collapsed && user && (
               <div className="mt-3 rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3">
                 <div className="flex items-center gap-3">
-                  <img src="https://api.dicebear.com/9.x/glass/svg?seed=owner" alt="" className="h-9 w-9 rounded-full" />
+                  <img src={user.avatar_url ?? ""} alt="" className="h-9 w-9 rounded-full" />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">Carlos Almeida</div>
-                    <div className="truncate text-xs text-muted-foreground">Owner · Livepulse</div>
+                    <div className="truncate text-sm font-semibold">{user.name}</div>
+                    <div className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]} · Livepulse</div>
                   </div>
-                  <Link to="/login" className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
+                  <Link
+                    to="/login"
+                    onClick={() => signOut()}
+                    className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                  >
                     <LogOut className="h-4 w-4" />
                   </Link>
                 </div>
