@@ -17,6 +17,7 @@ import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppRankingRouteImport } from './routes/app.ranking'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
+import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppManagersRouteImport } from './routes/app.managers'
 import { Route as AppHostsRouteImport } from './routes/app.hosts'
 import { Route as AppGoalsRouteImport } from './routes/app.goals'
@@ -64,6 +65,11 @@ const AppRankingRoute = AppRankingRouteImport.update({
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
 const AppManagersRoute = AppManagersRouteImport.update({
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/app/goals': typeof AppGoalsRoute
   '/app/hosts': typeof AppHostsRoute
   '/app/managers': typeof AppManagersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/app/goals': typeof AppGoalsRoute
   '/app/hosts': typeof AppHostsRoute
   '/app/managers': typeof AppManagersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/app/goals': typeof AppGoalsRoute
   '/app/hosts': typeof AppHostsRoute
   '/app/managers': typeof AppManagersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/app/goals'
     | '/app/hosts'
     | '/app/managers'
+    | '/app/notifications'
     | '/app/profile'
     | '/app/ranking'
     | '/app/reports'
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/app/goals'
     | '/app/hosts'
     | '/app/managers'
+    | '/app/notifications'
     | '/app/profile'
     | '/app/ranking'
     | '/app/reports'
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/app/goals'
     | '/app/hosts'
     | '/app/managers'
+    | '/app/notifications'
     | '/app/profile'
     | '/app/ranking'
     | '/app/reports'
@@ -281,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/notifications': {
+      id: '/app/notifications'
+      path: '/notifications'
+      fullPath: '/app/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/managers': {
       id: '/app/managers'
       path: '/managers'
@@ -349,6 +368,7 @@ interface AppRouteChildren {
   AppGoalsRoute: typeof AppGoalsRoute
   AppHostsRoute: typeof AppHostsRoute
   AppManagersRoute: typeof AppManagersRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppRankingRoute: typeof AppRankingRoute
   AppReportsRoute: typeof AppReportsRoute
@@ -365,6 +385,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppGoalsRoute: AppGoalsRoute,
   AppHostsRoute: AppHostsRoute,
   AppManagersRoute: AppManagersRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
   AppRankingRoute: AppRankingRoute,
   AppReportsRoute: AppReportsRoute,
