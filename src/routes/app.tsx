@@ -172,14 +172,28 @@ function AppLayout() {
                 <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">⌘K</kbd>
               </div>
             </div>
-            <button className="relative grid h-9 w-9 place-items-center rounded-lg border border-border bg-card/60 text-muted-foreground hover:text-foreground">
+            <Link
+              to="/app/notifications"
+              className="relative grid h-9 w-9 place-items-center rounded-lg border border-border bg-card/60 text-muted-foreground transition hover:text-foreground"
+              aria-label="Notificações"
+            >
               <Bell className="h-4 w-4" />
-              <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-primary" />
-            </button>
+              {unread > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                  {unread}
+                </span>
+              )}
+            </Link>
             <div className="hidden items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 md:flex">
               <span className="h-2 w-2 animate-pulse-ring rounded-full bg-success" />
               <span className="text-xs font-medium">42 hosts online</span>
             </div>
+            {user && (
+              <div className="hidden items-center gap-2 rounded-lg border border-border bg-card/60 px-2 py-1 md:flex">
+                <img src={user.avatar_url ?? ""} alt="" className="h-6 w-6 rounded-full" />
+                <span className="text-xs font-medium">{ROLE_LABELS[user.role]}</span>
+              </div>
+            )}
           </header>
 
           <main className="flex-1 p-4 md:p-8">
