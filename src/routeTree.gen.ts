@@ -28,6 +28,9 @@ import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCommunityRouteImport } from './routes/app.community'
 import { Route as AppCommissionsRouteImport } from './routes/app.commissions'
 import { Route as AppAiRouteImport } from './routes/app.ai'
+import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminOverviewRouteImport } from './routes/admin.overview'
+import { Route as AdminAgenciesRouteImport } from './routes/admin.agencies'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -124,12 +127,30 @@ const AppAiRoute = AppAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOverviewRoute = AdminOverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAgenciesRoute = AdminAgenciesRouteImport.update({
+  id: '/agencies',
+  path: '/agencies',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/admin/agencies': typeof AdminAgenciesRoute
+  '/admin/overview': typeof AdminOverviewRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/app/ai': typeof AppAiRoute
   '/app/commissions': typeof AppCommissionsRoute
   '/app/community': typeof AppCommunityRoute
@@ -149,6 +170,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/agencies': typeof AdminAgenciesRoute
+  '/admin/overview': typeof AdminOverviewRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/app/ai': typeof AppAiRoute
   '/app/commissions': typeof AppCommissionsRoute
   '/app/community': typeof AppCommunityRoute
@@ -171,6 +195,9 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/admin/agencies': typeof AdminAgenciesRoute
+  '/admin/overview': typeof AdminOverviewRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/app/ai': typeof AppAiRoute
   '/app/commissions': typeof AppCommissionsRoute
   '/app/community': typeof AppCommunityRoute
@@ -194,6 +221,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/login'
+    | '/admin/agencies'
+    | '/admin/overview'
+    | '/admin/subscriptions'
     | '/app/ai'
     | '/app/commissions'
     | '/app/community'
@@ -213,6 +243,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin/agencies'
+    | '/admin/overview'
+    | '/admin/subscriptions'
     | '/app/ai'
     | '/app/commissions'
     | '/app/community'
@@ -234,6 +267,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/app'
     | '/login'
+    | '/admin/agencies'
+    | '/admin/overview'
+    | '/admin/subscriptions'
     | '/app/ai'
     | '/app/commissions'
     | '/app/community'
@@ -393,14 +429,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/subscriptions': {
+      id: '/admin/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/admin/subscriptions'
+      preLoaderRoute: typeof AdminSubscriptionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/overview': {
+      id: '/admin/overview'
+      path: '/overview'
+      fullPath: '/admin/overview'
+      preLoaderRoute: typeof AdminOverviewRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/agencies': {
+      id: '/admin/agencies'
+      path: '/agencies'
+      fullPath: '/admin/agencies'
+      preLoaderRoute: typeof AdminAgenciesRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAgenciesRoute: typeof AdminAgenciesRoute
+  AdminOverviewRoute: typeof AdminOverviewRoute
+  AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAgenciesRoute: AdminAgenciesRoute,
+  AdminOverviewRoute: AdminOverviewRoute,
+  AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
