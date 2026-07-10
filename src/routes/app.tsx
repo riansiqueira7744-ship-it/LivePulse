@@ -35,6 +35,7 @@ const nav = [
   { to: "/app/ranking", label: "Ranking", icon: Trophy },
   { to: "/app/ai", label: "IA", icon: Sparkles, badge: "Novo" },
   { to: "/app/reports", label: "Relatórios", icon: FileBarChart },
+  { to: "/app/notifications", label: "Notificações", icon: Bell },
   { to: "/app/community", label: "Comunidade", icon: MessageSquare },
 ] as const;
 
@@ -46,6 +47,11 @@ const bottomNav = [
 function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const { user, signOut, canAccess } = useAuth();
+  const unread = notificationsService.unreadCount();
+
+  const visibleNav = nav.filter((item) => canAccess(item.to));
+
 
   return (
     <div className="mesh-bg min-h-screen">
