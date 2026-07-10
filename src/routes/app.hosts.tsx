@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, Filter, Plus, Star, MoreHorizontal, ArrowUpDown, Download } from "lucide-react";
 import { Card, PageHeader, currency } from "@/components/app-shell";
-import { hosts as allHosts, type Host } from "@/lib/mock-data";
+import { type Host } from "@/lib/mock-data";
+import { useScopedHosts } from "@/lib/scoped-data";
+import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/hosts")({
