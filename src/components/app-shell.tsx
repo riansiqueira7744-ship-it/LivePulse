@@ -1,11 +1,31 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Building2 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { PLAN_LABELS, ROLE_LABELS } from "@/lib/constants";
+
+export function AgencyContextBadge({ className }: { className?: string }) {
+  const { currentAgency, user } = useAuth();
+  if (!currentAgency || !user) return null;
+  return (
+    <div className={cn("inline-flex items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 text-xs", className)}>
+      <div className="grid h-5 w-5 place-items-center rounded-md bg-primary/15 text-primary">
+        <Building2 className="h-3 w-3" />
+      </div>
+      <span className="font-medium">{currentAgency.name}</span>
+      <span className="rounded-md bg-muted/60 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+        {PLAN_LABELS[currentAgency.plan]}
+      </span>
+      <span className="hidden text-muted-foreground sm:inline">· {ROLE_LABELS[user.role]}</span>
+    </div>
+  );
+}
 
 export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
   return (
     <div className="mb-8 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
       <div className="min-w-0">
+        <div className="mb-2"><AgencyContextBadge /></div>
         <h1 className="font-display text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
         {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
       </div>
@@ -13,6 +33,7 @@ export function PageHeader({ title, description, actions }: { title: string; des
     </div>
   );
 }
+
 
 export function StatCard({
   label, value, delta, deltaLabel, icon, positive, gradient,
