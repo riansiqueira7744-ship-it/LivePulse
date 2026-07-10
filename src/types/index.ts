@@ -276,6 +276,26 @@ export interface FileAsset {
   url: string;
 }
 
+// ---------- Broadcasts ----------
+
+export type BroadcastPriority = "info" | "warning" | "critical";
+export type BroadcastTarget = "all" | "selected";
+export type BroadcastStatus = "draft" | "scheduled" | "sent";
+
+export interface Broadcast {
+  id: UUID;
+  title: string;
+  message: string;
+  priority: BroadcastPriority;
+  target: BroadcastTarget;
+  audience_ids: UUID[];      // agency ids when target === "selected"
+  status: BroadcastStatus;
+  scheduled_at: ISODate | null;
+  sent_at: ISODate | null;
+  created_at: ISODate;
+  reach: number;
+}
+
 // ---------- Calendar ----------
 
 export type CalendarEventKind = "event" | "goal" | "meeting" | "payment" | "training";

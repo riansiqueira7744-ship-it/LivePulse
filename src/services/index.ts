@@ -12,6 +12,7 @@ import { mockStoreItems } from "@/lib/mock-store";
 import { mockSeasons } from "@/lib/mock-seasons";
 import { mockFiles } from "@/lib/mock-files";
 import { mockEvents } from "@/lib/mock-calendar";
+import { mockBroadcasts } from "@/lib/mock-broadcasts";
 import type { Notification } from "@/types";
 
 const delay = <T,>(v: T, ms = 120) => new Promise<T>((r) => setTimeout(() => r(v), ms));
