@@ -28,8 +28,10 @@ import { Route as AppDashboardRouteImport } from './routes/app.dashboard'
 import { Route as AppCommunityRouteImport } from './routes/app.community'
 import { Route as AppCommissionsRouteImport } from './routes/app.commissions'
 import { Route as AppAiRouteImport } from './routes/app.ai'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
 import { Route as AdminOverviewRouteImport } from './routes/admin.overview'
+import { Route as AdminBroadcastsRouteImport } from './routes/admin.broadcasts'
 import { Route as AdminAgenciesRouteImport } from './routes/admin.agencies'
 
 const LoginRoute = LoginRouteImport.update({
@@ -127,6 +129,11 @@ const AppAiRoute = AppAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
   id: '/subscriptions',
   path: '/subscriptions',
@@ -135,6 +142,11 @@ const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
 const AdminOverviewRoute = AdminOverviewRouteImport.update({
   id: '/overview',
   path: '/overview',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBroadcastsRoute = AdminBroadcastsRouteImport.update({
+  id: '/broadcasts',
+  path: '/broadcasts',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminAgenciesRoute = AdminAgenciesRouteImport.update({
@@ -149,8 +161,10 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/agencies': typeof AdminAgenciesRoute
+  '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/app/ai': typeof AppAiRoute
   '/app/commissions': typeof AppCommissionsRoute
   '/app/community': typeof AppCommunityRoute
@@ -171,8 +185,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/agencies': typeof AdminAgenciesRoute
+  '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/app/ai': typeof AppAiRoute
   '/app/commissions': typeof AppCommissionsRoute
   '/app/community': typeof AppCommunityRoute
@@ -196,8 +212,10 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/agencies': typeof AdminAgenciesRoute
+  '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/app/ai': typeof AppAiRoute
   '/app/commissions': typeof AppCommissionsRoute
   '/app/community': typeof AppCommunityRoute
@@ -222,8 +240,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/admin/agencies'
+    | '/admin/broadcasts'
     | '/admin/overview'
     | '/admin/subscriptions'
+    | '/admin/support'
     | '/app/ai'
     | '/app/commissions'
     | '/app/community'
@@ -244,8 +264,10 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/agencies'
+    | '/admin/broadcasts'
     | '/admin/overview'
     | '/admin/subscriptions'
+    | '/admin/support'
     | '/app/ai'
     | '/app/commissions'
     | '/app/community'
@@ -268,8 +290,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/admin/agencies'
+    | '/admin/broadcasts'
     | '/admin/overview'
     | '/admin/subscriptions'
+    | '/admin/support'
     | '/app/ai'
     | '/app/commissions'
     | '/app/community'
@@ -429,6 +453,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAiRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/subscriptions': {
       id: '/admin/subscriptions'
       path: '/subscriptions'
@@ -443,6 +474,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOverviewRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/broadcasts': {
+      id: '/admin/broadcasts'
+      path: '/broadcasts'
+      fullPath: '/admin/broadcasts'
+      preLoaderRoute: typeof AdminBroadcastsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/agencies': {
       id: '/admin/agencies'
       path: '/agencies'
@@ -455,15 +493,19 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminAgenciesRoute: typeof AdminAgenciesRoute
+  AdminBroadcastsRoute: typeof AdminBroadcastsRoute
   AdminOverviewRoute: typeof AdminOverviewRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAgenciesRoute: AdminAgenciesRoute,
+  AdminBroadcastsRoute: AdminBroadcastsRoute,
   AdminOverviewRoute: AdminOverviewRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
