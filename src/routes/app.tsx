@@ -1,4 +1,4 @@
-import { Link, Outlet, useRouterState, createFileRoute } from "@tanstack/react-router";
+import { Link, Outlet, useRouterState, createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   LayoutDashboard, Users, UserCog, Wallet, Percent, Target, Trophy,
@@ -6,10 +6,24 @@ import {
   ChevronLeft, ChevronRight, LogOut, Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-context";
+import { notificationsService } from "@/services";
+import { ROLE_LABELS } from "@/lib/constants";
 
 export const Route = createFileRoute("/app")({
+  beforeLoad: () => {
+    // Mock auth guard — reads persisted session synchronously.
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("livepulse.auth");
+      if (!raw) throw redirect({ to: "/login" });
+    } catch (e) {
+      if (e && typeof e === "object" && "to" in (e as object)) throw e;
+    }
+  },
   component: AppLayout,
 });
+
 
 const nav = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
