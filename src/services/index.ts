@@ -91,3 +91,7 @@ export const filesService = {
 export const calendarService = {
   events: (_agencyId?: string) => delay(mockEvents),
 };
+
+export const broadcastsService = {
+  list: () => delay(mockBroadcasts),
+};
