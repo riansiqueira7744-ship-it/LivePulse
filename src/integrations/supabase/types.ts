@@ -27,9 +27,9 @@ export type Database = {
           mrr: number
           name: string
           owner_id: string | null
-          plan: Database["public"]["Enums"]["agency_plan"]
+          plan: string
           slug: string
-          status: Database["public"]["Enums"]["agency_status"]
+          status: string
           updated_at: string
         }
         Insert: {
@@ -44,9 +44,9 @@ export type Database = {
           mrr?: number
           name: string
           owner_id?: string | null
-          plan?: Database["public"]["Enums"]["agency_plan"]
+          plan?: string
           slug: string
-          status?: Database["public"]["Enums"]["agency_status"]
+          status?: string
           updated_at?: string
         }
         Update: {
@@ -61,9 +61,9 @@ export type Database = {
           mrr?: number
           name?: string
           owner_id?: string | null
-          plan?: Database["public"]["Enums"]["agency_plan"]
+          plan?: string
           slug?: string
-          status?: Database["public"]["Enums"]["agency_status"]
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -517,44 +517,65 @@ export type Database = {
       plans: {
         Row: {
           active: boolean
+          billing_period: string
           created_at: string
           currency: string
           description: string | null
           duration_days: number
+          featured: boolean
           id: string
+          license_limit: number | null
+          licenses_used: number
           max_hosts: number
           max_managers: number
           name: string
           price_monthly: number
+          savings_label: string | null
           slug: string
+          sort_order: number
+          total_price: number
           updated_at: string
         }
         Insert: {
           active?: boolean
+          billing_period?: string
           created_at?: string
           currency?: string
           description?: string | null
           duration_days?: number
+          featured?: boolean
           id?: string
+          license_limit?: number | null
+          licenses_used?: number
           max_hosts?: number
           max_managers?: number
           name: string
           price_monthly?: number
+          savings_label?: string | null
           slug: string
+          sort_order?: number
+          total_price?: number
           updated_at?: string
         }
         Update: {
           active?: boolean
+          billing_period?: string
           created_at?: string
           currency?: string
           description?: string | null
           duration_days?: number
+          featured?: boolean
           id?: string
+          license_limit?: number | null
+          licenses_used?: number
           max_hosts?: number
           max_managers?: number
           name?: string
           price_monthly?: number
+          savings_label?: string | null
           slug?: string
+          sort_order?: number
+          total_price?: number
           updated_at?: string
         }
         Relationships: []
@@ -681,6 +702,7 @@ export type Database = {
           activated_at: string | null
           activated_by: string | null
           agency_id: string
+          billing_period: string
           created_at: string
           currency: string
           current_period_end: string | null
@@ -688,10 +710,11 @@ export type Database = {
           max_hosts: number | null
           max_managers: number | null
           payment_notes: string | null
-          plan: Database["public"]["Enums"]["agency_plan"]
+          plan: string
           price_monthly: number
           seats: number
-          status: Database["public"]["Enums"]["subscription_status"]
+          status: string
+          total_price: number | null
           trial_ends_at: string | null
           updated_at: string
         }
@@ -699,6 +722,7 @@ export type Database = {
           activated_at?: string | null
           activated_by?: string | null
           agency_id: string
+          billing_period?: string
           created_at?: string
           currency?: string
           current_period_end?: string | null
@@ -706,10 +730,11 @@ export type Database = {
           max_hosts?: number | null
           max_managers?: number | null
           payment_notes?: string | null
-          plan?: Database["public"]["Enums"]["agency_plan"]
+          plan?: string
           price_monthly?: number
           seats?: number
-          status?: Database["public"]["Enums"]["subscription_status"]
+          status?: string
+          total_price?: number | null
           trial_ends_at?: string | null
           updated_at?: string
         }
@@ -717,6 +742,7 @@ export type Database = {
           activated_at?: string | null
           activated_by?: string | null
           agency_id?: string
+          billing_period?: string
           created_at?: string
           currency?: string
           current_period_end?: string | null
@@ -724,10 +750,11 @@ export type Database = {
           max_hosts?: number | null
           max_managers?: number | null
           payment_notes?: string | null
-          plan?: Database["public"]["Enums"]["agency_plan"]
+          plan?: string
           price_monthly?: number
           seats?: number
-          status?: Database["public"]["Enums"]["subscription_status"]
+          status?: string
+          total_price?: number | null
           trial_ends_at?: string | null
           updated_at?: string
         }
@@ -841,6 +868,10 @@ export type Database = {
       }
       is_agency_owner_of: { Args: { _agency_id: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      reject_subscription_payment: {
+        Args: { _notes?: string; _subscription_id: string }
+        Returns: undefined
+      }
       search_unaffiliated_host_by_livepulse_id: {
         Args: { _livepulse_id: string }
         Returns: {

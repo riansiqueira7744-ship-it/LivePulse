@@ -44,7 +44,9 @@ function AppLayout() {
   const unread = notifs.filter((n) => !n.read).length;
 
   useEffect(() => {
-    if (!loading && !user) navigate({ to: "/login" });
+    if (loading) return;
+    if (!user) { navigate({ to: "/login" }); return; }
+    if (user.role === "agency_pending") navigate({ to: "/pending-payment" });
   }, [loading, user, navigate]);
 
   if (loading || !user) {

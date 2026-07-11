@@ -8,6 +8,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   agency_owner: "Dono da Agência",
   manager: "Gerente",
   host: "Host",
+  agency_pending: "Agência (aguardando pagamento)",
 };
 
 export const HOST_STATUS_LABELS: Record<HostStatus, string> = {
@@ -30,19 +31,28 @@ export const NOTIFICATION_TONE: Record<NotificationLevel, string> = {
   danger: "bg-destructive/15 text-destructive",
 };
 
-export const PLAN_LABELS: Record<PlanTier, string> = {
+export const PLAN_LABELS: Record<string, string> = {
   starter: "Starter",
   growth: "Growth",
   scale: "Scale",
   enterprise: "Enterprise",
+  mensal: "Mensal",
+  trimestral: "Trimestral",
+  semestral: "Semestral",
+  anual: "Anual",
+  founder: "Founder Vitalício",
 };
 
-export const AGENCY_STATUS_LABELS: Record<AgencyStatus, string> = {
+export const AGENCY_STATUS_LABELS: Record<string, string> = {
   active: "Ativa",
   trial: "Teste",
+  pending: "Aguardando pagamento",
   suspended: "Suspensa",
   canceled: "Cancelada",
+  cancelled: "Cancelada",
 };
+
+export const WHATSAPP_SUPPORT = "5554994896776";
 
 // Route access map for role-based guarding.
 export const ROLE_ROUTES: Record<UserRole, string[]> = {
@@ -61,6 +71,7 @@ export const ROLE_ROUTES: Record<UserRole, string[]> = {
     "/app/seasons", "/app/files", "/app/calendar", "/app/invites",
     "/app/notifications", "/app/profile", "/app/settings",
   ],
+  agency_pending: ["/pending-payment"],
 };
 
 // Permission matrix — used by `can()` in auth-context.
@@ -87,6 +98,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   host: [
     "chat:agency", "livecoins:buy", "store:buy",
   ],
+  agency_pending: [],
 };
 
 export const CURRENCY_FMT = new Intl.NumberFormat("pt-BR", {

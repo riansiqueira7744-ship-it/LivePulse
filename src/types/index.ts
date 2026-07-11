@@ -5,7 +5,7 @@
 export type UUID = string;
 export type ISODate = string;
 
-export type UserRole = "super_admin" | "agency_owner" | "manager" | "host";
+export type UserRole = "super_admin" | "agency_owner" | "manager" | "host" | "agency_pending";
 
 export type Locale = "pt-BR" | "en" | "es" | "fr" | "it" | "de";
 
@@ -26,8 +26,8 @@ export interface User {
 
 // ---------- Agencies / SaaS ----------
 
-export type AgencyStatus = "active" | "trial" | "suspended" | "canceled";
-export type PlanTier = "starter" | "growth" | "scale" | "enterprise";
+export type AgencyStatus = string;
+export type PlanTier = string;
 
 export interface Agency {
   id: UUID;
