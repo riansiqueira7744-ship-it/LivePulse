@@ -77,7 +77,7 @@ function SubscriptionsPage() {
                   <tr key={s.id} className="border-b border-border/50 last:border-0 hover:bg-card/50">
                     <td className="py-3 pr-3">
                       <div className="flex items-center gap-3">
-                        <img src={agency?.logo_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${agency?.slug ?? s.agency_id}`} className="h-8 w-8 rounded-lg border border-border" alt="" />
+                        <Avatar src={agency?.logo_url} name={agency?.name ?? s.agency_id} size={32} rounded="lg" className="border border-border" />
                         <span className="font-medium">{agency?.name ?? "—"}</span>
                       </div>
                     </td>
