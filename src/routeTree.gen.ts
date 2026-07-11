@@ -26,6 +26,7 @@ import { Route as AppRankingRouteImport } from './routes/app.ranking'
 import { Route as AppProfileRouteImport } from './routes/app.profile'
 import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppManagersRouteImport } from './routes/app.managers'
+import { Route as AppInvitesRouteImport } from './routes/app.invites'
 import { Route as AppHostsRouteImport } from './routes/app.hosts'
 import { Route as AppGoalsRouteImport } from './routes/app.goals'
 import { Route as AppFinanceRouteImport } from './routes/app.finance'
@@ -124,6 +125,11 @@ const AppManagersRoute = AppManagersRouteImport.update({
   path: '/managers',
   getParentRoute: () => AppRoute,
 } as any)
+const AppInvitesRoute = AppInvitesRouteImport.update({
+  id: '/invites',
+  path: '/invites',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHostsRoute = AppHostsRouteImport.update({
   id: '/hosts',
   path: '/hosts',
@@ -205,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/app/finance': typeof AppFinanceRoute
   '/app/goals': typeof AppGoalsRoute
   '/app/hosts': typeof AppHostsRoute
+  '/app/invites': typeof AppInvitesRoute
   '/app/managers': typeof AppManagersRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
@@ -234,6 +241,7 @@ export interface FileRoutesByTo {
   '/app/finance': typeof AppFinanceRoute
   '/app/goals': typeof AppGoalsRoute
   '/app/hosts': typeof AppHostsRoute
+  '/app/invites': typeof AppInvitesRoute
   '/app/managers': typeof AppManagersRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
@@ -266,6 +274,7 @@ export interface FileRoutesById {
   '/app/finance': typeof AppFinanceRoute
   '/app/goals': typeof AppGoalsRoute
   '/app/hosts': typeof AppHostsRoute
+  '/app/invites': typeof AppInvitesRoute
   '/app/managers': typeof AppManagersRoute
   '/app/notifications': typeof AppNotificationsRoute
   '/app/profile': typeof AppProfileRoute
@@ -299,6 +308,7 @@ export interface FileRouteTypes {
     | '/app/finance'
     | '/app/goals'
     | '/app/hosts'
+    | '/app/invites'
     | '/app/managers'
     | '/app/notifications'
     | '/app/profile'
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/app/finance'
     | '/app/goals'
     | '/app/hosts'
+    | '/app/invites'
     | '/app/managers'
     | '/app/notifications'
     | '/app/profile'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/app/finance'
     | '/app/goals'
     | '/app/hosts'
+    | '/app/invites'
     | '/app/managers'
     | '/app/notifications'
     | '/app/profile'
@@ -502,6 +514,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppManagersRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/invites': {
+      id: '/app/invites'
+      path: '/invites'
+      fullPath: '/app/invites'
+      preLoaderRoute: typeof AppInvitesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/hosts': {
       id: '/app/hosts'
       path: '/hosts'
@@ -617,6 +636,7 @@ interface AppRouteChildren {
   AppFinanceRoute: typeof AppFinanceRoute
   AppGoalsRoute: typeof AppGoalsRoute
   AppHostsRoute: typeof AppHostsRoute
+  AppInvitesRoute: typeof AppInvitesRoute
   AppManagersRoute: typeof AppManagersRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
@@ -634,6 +654,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppFinanceRoute: AppFinanceRoute,
   AppGoalsRoute: AppGoalsRoute,
   AppHostsRoute: AppHostsRoute,
+  AppInvitesRoute: AppInvitesRoute,
   AppManagersRoute: AppManagersRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,

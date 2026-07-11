@@ -25,6 +25,7 @@ const nav = [
   { to: "/app/ai", label: "IA", icon: Sparkles, badge: "Novo" },
   { to: "/app/reports", label: "Relatórios", icon: FileBarChart },
   { to: "/app/notifications", label: "Notificações", icon: Bell },
+  { to: "/app/invites", label: "Convites", icon: Mail },
   { to: "/app/community", label: "Comunidade", icon: MessageSquare },
 ] as const;
 
