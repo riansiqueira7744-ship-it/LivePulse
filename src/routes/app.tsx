@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { useNotifications } from "@/hooks/use-data";
 import { ROLE_LABELS } from "@/lib/constants";
+import { Avatar } from "@/components/avatar";
 
 export const Route = createFileRoute("/app")({
   component: AppLayout,
