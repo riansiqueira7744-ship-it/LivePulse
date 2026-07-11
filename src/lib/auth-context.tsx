@@ -45,15 +45,21 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 async function loadContext(userId: string, email: string): Promise<{ user: AuthUser; agency: CurrentAgency | null } | null> {
-  const [{ data: profile }, { data: roles }] = await Promise.all([
+  const [{ data: profile }, { data: roles }, { data: ownedAgencies }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", userId),
+    supabase.from("agencies").select("id,name,slug,logo_url,plan,status").eq("owner_id", userId),
   ]);
 
   // Priority: super_admin > agency_owner > manager > host
   const priority: UserRole[] = ["super_admin", "agency_owner", "manager", "host"];
   const rowRoles = (roles ?? []).map((r) => r.role as UserRole);
-  const role: UserRole = priority.find((p) => rowRoles.includes(p)) ?? "host";
+  let role: UserRole | undefined = priority.find((p) => rowRoles.includes(p));
+
+  // Derive pending state: user owns an agency but has no operational role yet.
+  const pendingAgency = (ownedAgencies ?? []).find((a) => a.status !== "active");
+  if (!role && pendingAgency) role = "agency_pending";
+  if (!role) role = "host"; // Fallback for auth users with no role.
 
   const user: AuthUser = {
     id: userId,
@@ -62,7 +68,7 @@ async function loadContext(userId: string, email: string): Promise<{ user: AuthU
     avatar_url: profile?.avatar_url ?? null,
     role,
     livepulse_id: (profile as { livepulse_id?: string | null } | null)?.livepulse_id ?? null,
-    agency_id: profile?.agency_id ?? null,
+    agency_id: profile?.agency_id ?? pendingAgency?.id ?? null,
     whatsapp: profile?.whatsapp ?? null,
     country: profile?.country ?? null,
     city: profile?.city ?? null,
@@ -70,13 +76,14 @@ async function loadContext(userId: string, email: string): Promise<{ user: AuthU
   };
 
   let agency: CurrentAgency | null = null;
-  if (user.agency_id) {
+  const agencyId = user.agency_id;
+  if (agencyId) {
     const { data } = await supabase
       .from("agencies")
       .select("id,name,slug,logo_url,plan,status")
-      .eq("id", user.agency_id)
+      .eq("id", agencyId)
       .maybeSingle();
-    if (data) agency = data as CurrentAgency;
+    if (data) agency = data as unknown as CurrentAgency;
   }
 
   return { user, agency };
