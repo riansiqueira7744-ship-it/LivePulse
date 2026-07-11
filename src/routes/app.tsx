@@ -200,7 +200,7 @@ function AppLayout() {
               )}
             </Link>
             <div className="hidden items-center gap-2 rounded-lg border border-border bg-card/60 px-2 py-1 md:flex">
-              <img src={user.avatar_url ?? ""} alt="" className="h-6 w-6 rounded-full" />
+              <Avatar src={user.avatar_url} name={user.name} size={24} />
               <span className="text-xs font-medium">{ROLE_LABELS[user.role]}</span>
             </div>
           </header>
