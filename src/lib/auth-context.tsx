@@ -26,8 +26,8 @@ export interface CurrentAgency {
   name: string;
   slug: string;
   logo_url: string | null;
-  plan: "starter" | "growth" | "scale" | "enterprise";
-  status: "active" | "trial" | "suspended" | "cancelled";
+  plan: string;
+  status: string;
 }
 
 interface AuthContextValue {
