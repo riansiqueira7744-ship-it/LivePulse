@@ -243,3 +243,47 @@ export const notificationsService = {
     if (error) throw error;
   },
 };
+
+// ---------- PROFILE ----------
+export type DbProfile = {
+  id: string; email: string | null; name: string | null; avatar_url: string | null;
+  whatsapp: string | null; country: string | null; city: string | null;
+  platform: string | null; platform_user_id: string | null;
+  locale: string | null; livepulse_id: string | null; agency_id: string | null;
+};
+
+export const profileService = {
+  get: async (id: string) => {
+    const { data, error } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data as DbProfile | null;
+  },
+  update: async (id: string, patch: Partial<DbProfile>) => {
+    const { data, error } = await supabase.from("profiles").update(patch as never).eq("id", id).select().single();
+    if (error) throw error;
+    return data as DbProfile;
+  },
+  uploadAvatar: async (userId: string, file: File) => {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${userId}/avatar-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+    if (upErr) throw upErr;
+    // Signed URL long-lived; bucket is private but any authenticated user can view.
+    const { data: signed, error: signErr } = await supabase.storage.from("avatars").createSignedUrl(path, 60 * 60 * 24 * 365);
+    if (signErr) throw signErr;
+    const url = signed.signedUrl;
+    const { error: profErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", userId);
+    if (profErr) throw profErr;
+    return url;
+  },
+  removeAvatar: async (userId: string) => {
+    // Best-effort: remove all files under the user's folder.
+    const { data: files } = await supabase.storage.from("avatars").list(userId);
+    if (files && files.length) {
+      await supabase.storage.from("avatars").remove(files.map((f) => `${userId}/${f.name}`));
+    }
+    const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", userId);
+    if (error) throw error;
+  },
+};
+
