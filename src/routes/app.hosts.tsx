@@ -35,6 +35,7 @@ function HostsPage() {
   const [cat, setCat] = useState<string>("Todas");
   const [editing, setEditing] = useState<DbHost | null>(null);
   const [creating, setCreating] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const [menu, setMenu] = useState<string | null>(null);
 
   const cats = ["Todas", ...Array.from(new Set(hosts.map((h) => h.category).filter(Boolean) as string[]))];
