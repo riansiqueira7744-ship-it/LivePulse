@@ -51,9 +51,14 @@ function HostsPage() {
         title="Hosts"
         description={`${scopeLabel} · ${hosts.length} cadastrados`}
         actions={can("hosts:manage") ? (
-          <button onClick={() => setCreating(true)} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
-            <Plus className="mr-1 inline h-3.5 w-3.5" /> Novo host
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setInviting(true)} className="rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs font-semibold hover:border-primary/50">
+              <Search className="mr-1 inline h-3.5 w-3.5" /> Convidar por Livepulse ID
+            </button>
+            <button onClick={() => setCreating(true)} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+              <Plus className="mr-1 inline h-3.5 w-3.5" /> Novo host
+            </button>
+          </div>
         ) : null}
       />
 
