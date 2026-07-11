@@ -14,16 +14,647 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agencies: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          hosts_count: number
+          id: string
+          logo_url: string | null
+          managers_count: number
+          mrr: number
+          name: string
+          owner_id: string | null
+          plan: Database["public"]["Enums"]["agency_plan"]
+          slug: string
+          status: Database["public"]["Enums"]["agency_status"]
+          updated_at: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          hosts_count?: number
+          id?: string
+          logo_url?: string | null
+          managers_count?: number
+          mrr?: number
+          name: string
+          owner_id?: string | null
+          plan?: Database["public"]["Enums"]["agency_plan"]
+          slug: string
+          status?: Database["public"]["Enums"]["agency_status"]
+          updated_at?: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          hosts_count?: number
+          id?: string
+          logo_url?: string | null
+          managers_count?: number
+          mrr?: number
+          name?: string
+          owner_id?: string | null
+          plan?: Database["public"]["Enums"]["agency_plan"]
+          slug?: string
+          status?: Database["public"]["Enums"]["agency_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      commissions: {
+        Row: {
+          active: boolean
+          agency_id: string
+          base: string
+          created_at: string
+          host_id: string | null
+          id: string
+          manager_id: string | null
+          percentage: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          agency_id: string
+          base?: string
+          created_at?: string
+          host_id?: string | null
+          id?: string
+          manager_id?: string | null
+          percentage: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          agency_id?: string
+          base?: string
+          created_at?: string
+          host_id?: string | null
+          id?: string
+          manager_id?: string | null
+          percentage?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commissions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "hosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "managers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_transactions: {
+        Row: {
+          agency_id: string
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          host_id: string | null
+          id: string
+          manager_id: string | null
+          occurred_at: string
+          reference: string | null
+          status: Database["public"]["Enums"]["transaction_status"]
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          host_id?: string | null
+          id?: string
+          manager_id?: string | null
+          occurred_at?: string
+          reference?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          type: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          host_id?: string | null
+          id?: string
+          manager_id?: string | null
+          occurred_at?: string
+          reference?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          type?: Database["public"]["Enums"]["transaction_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "hosts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "managers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          agency_id: string
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          host_id: string | null
+          id: string
+          period: Database["public"]["Enums"]["goal_period"]
+          progress: number
+          starts_at: string
+          status: Database["public"]["Enums"]["goal_status"]
+          target: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          host_id?: string | null
+          id?: string
+          period?: Database["public"]["Enums"]["goal_period"]
+          progress?: number
+          starts_at?: string
+          status?: Database["public"]["Enums"]["goal_status"]
+          target: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          host_id?: string | null
+          id?: string
+          period?: Database["public"]["Enums"]["goal_period"]
+          progress?: number
+          starts_at?: string
+          status?: Database["public"]["Enums"]["goal_status"]
+          target?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "hosts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hosts: {
+        Row: {
+          agency_id: string
+          avatar_url: string | null
+          category: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          earnings_total: number
+          email: string | null
+          gifts_total: number
+          id: string
+          joined_at: string | null
+          live_hours: number
+          manager_id: string | null
+          nickname: string
+          platform: Database["public"]["Enums"]["host_platform"]
+          score: number
+          status: Database["public"]["Enums"]["host_status"]
+          updated_at: string
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          agency_id: string
+          avatar_url?: string | null
+          category?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          earnings_total?: number
+          email?: string | null
+          gifts_total?: number
+          id?: string
+          joined_at?: string | null
+          live_hours?: number
+          manager_id?: string | null
+          nickname: string
+          platform?: Database["public"]["Enums"]["host_platform"]
+          score?: number
+          status?: Database["public"]["Enums"]["host_status"]
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          agency_id?: string
+          avatar_url?: string | null
+          category?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          earnings_total?: number
+          email?: string | null
+          gifts_total?: number
+          id?: string
+          joined_at?: string | null
+          live_hours?: number
+          manager_id?: string | null
+          nickname?: string
+          platform?: Database["public"]["Enums"]["host_platform"]
+          score?: number
+          status?: Database["public"]["Enums"]["host_status"]
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hosts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hosts_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "managers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      managers: {
+        Row: {
+          agency_id: string
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          status: string
+          team_size: number
+          updated_at: string
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          agency_id: string
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          status?: string
+          team_size?: number
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          agency_id?: string
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          status?: string
+          team_size?: number
+          updated_at?: string
+          user_id?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "managers_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          agency_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          agency_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          agency_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          agency_id: string | null
+          avatar_url: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          locale: string
+          name: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          agency_id?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          locale?: string
+          name?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          agency_id?: string | null
+          avatar_url?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          locale?: string
+          name?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rankings: {
+        Row: {
+          agency_id: string
+          category: string | null
+          created_at: string
+          host_id: string
+          id: string
+          period: Database["public"]["Enums"]["goal_period"]
+          period_start: string
+          position: number
+          score: number
+        }
+        Insert: {
+          agency_id: string
+          category?: string | null
+          created_at?: string
+          host_id: string
+          id?: string
+          period?: Database["public"]["Enums"]["goal_period"]
+          period_start: string
+          position: number
+          score?: number
+        }
+        Update: {
+          agency_id?: string
+          category?: string | null
+          created_at?: string
+          host_id?: string
+          id?: string
+          period?: Database["public"]["Enums"]["goal_period"]
+          period_start?: string
+          position?: number
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rankings_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rankings_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "hosts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          agency_id: string
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          id: string
+          plan: Database["public"]["Enums"]["agency_plan"]
+          price_monthly: number
+          seats: number
+          status: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: Database["public"]["Enums"]["agency_plan"]
+          price_monthly?: number
+          seats?: number
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: Database["public"]["Enums"]["agency_plan"]
+          price_monthly?: number
+          seats?: number
+          status?: Database["public"]["Enums"]["subscription_status"]
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: true
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          agency_id: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          agency_id?: string | null
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          agency_id?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_agency_id: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_agency_owner_of: { Args: { _agency_id: string }; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      agency_plan: "starter" | "growth" | "scale" | "enterprise"
+      agency_status: "active" | "trial" | "suspended" | "cancelled"
+      app_role: "super_admin" | "agency_owner" | "manager" | "host"
+      goal_period: "weekly" | "monthly" | "quarterly"
+      goal_status: "active" | "completed" | "failed" | "cancelled"
+      host_platform: "tiktok" | "kwai" | "bigo" | "other"
+      host_status: "active" | "inactive" | "pending"
+      notification_type: "info" | "success" | "warning" | "danger"
+      subscription_status:
+        | "active"
+        | "trial"
+        | "suspended"
+        | "cancelled"
+        | "past_due"
+      transaction_status: "pending" | "confirmed" | "paid" | "failed"
+      transaction_type:
+        | "revenue"
+        | "payout"
+        | "commission"
+        | "refund"
+        | "adjustment"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +781,30 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      agency_plan: ["starter", "growth", "scale", "enterprise"],
+      agency_status: ["active", "trial", "suspended", "cancelled"],
+      app_role: ["super_admin", "agency_owner", "manager", "host"],
+      goal_period: ["weekly", "monthly", "quarterly"],
+      goal_status: ["active", "completed", "failed", "cancelled"],
+      host_platform: ["tiktok", "kwai", "bigo", "other"],
+      host_status: ["active", "inactive", "pending"],
+      notification_type: ["info", "success", "warning", "danger"],
+      subscription_status: [
+        "active",
+        "trial",
+        "suspended",
+        "cancelled",
+        "past_due",
+      ],
+      transaction_status: ["pending", "confirmed", "paid", "failed"],
+      transaction_type: [
+        "revenue",
+        "payout",
+        "commission",
+        "refund",
+        "adjustment",
+      ],
+    },
   },
 } as const
