@@ -18,6 +18,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as SignupHostRouteImport } from './routes/signup.host'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppRankingRouteImport } from './routes/app.ranking'
@@ -81,6 +82,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const SignupHostRoute = SignupHostRouteImport.update({
+  id: '/host',
+  path: '/host',
+  getParentRoute: () => SignupRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
@@ -180,7 +186,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/overview': typeof AdminOverviewRoute
@@ -199,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/signup/host': typeof SignupHostRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
 }
@@ -207,7 +214,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/overview': typeof AdminOverviewRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByTo {
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/signup/host': typeof SignupHostRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
 }
@@ -237,7 +245,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/signup': typeof SignupRoute
+  '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
   '/admin/broadcasts': typeof AdminBroadcastsRoute
   '/admin/overview': typeof AdminOverviewRoute
@@ -256,6 +264,7 @@ export interface FileRoutesById {
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/signup/host': typeof SignupHostRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
 }
@@ -287,6 +296,7 @@ export interface FileRouteTypes {
     | '/app/ranking'
     | '/app/reports'
     | '/app/settings'
+    | '/signup/host'
     | '/admin/'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/app/ranking'
     | '/app/reports'
     | '/app/settings'
+    | '/signup/host'
     | '/admin'
     | '/app'
   id:
@@ -343,6 +354,7 @@ export interface FileRouteTypes {
     | '/app/ranking'
     | '/app/reports'
     | '/app/settings'
+    | '/signup/host'
     | '/admin/'
     | '/app/'
   fileRoutesById: FileRoutesById
@@ -354,7 +366,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  SignupRoute: typeof SignupRoute
+  SignupRoute: typeof SignupRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -421,6 +433,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/signup/host': {
+      id: '/signup/host'
+      path: '/host'
+      fullPath: '/signup/host'
+      preLoaderRoute: typeof SignupHostRouteImport
+      parentRoute: typeof SignupRoute
     }
     '/app/settings': {
       id: '/app/settings'
@@ -607,6 +626,17 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface SignupRouteChildren {
+  SignupHostRoute: typeof SignupHostRoute
+}
+
+const SignupRouteChildren: SignupRouteChildren = {
+  SignupHostRoute: SignupHostRoute,
+}
+
+const SignupRouteWithChildren =
+  SignupRoute._addFileChildren(SignupRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
@@ -614,7 +644,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  SignupRoute: SignupRoute,
+  SignupRoute: SignupRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
