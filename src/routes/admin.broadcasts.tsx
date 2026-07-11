@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, PageHeader } from "@/components/app-shell";
-import { mockBroadcasts } from "@/lib/mock-broadcasts";
-import { mockAgencies } from "@/lib/mock-agencies";
+import { useAgencies } from "@/hooks/use-data";
 import type { Broadcast, BroadcastPriority, BroadcastStatus, BroadcastTarget } from "@/types";
 import { Plus, Megaphone, Clock, Send, X, AlertTriangle, Info, AlertOctagon, Trash2, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Avatar } from "@/components/avatar";
 
 export const Route = createFileRoute("/admin/broadcasts")({
   component: BroadcastsPage,
@@ -29,7 +29,9 @@ const statusCls: Record<BroadcastStatus, string> = {
 };
 
 function BroadcastsPage() {
-  const [items, setItems] = useState<Broadcast[]>(mockBroadcasts);
+  const { data: agencies = [] } = useAgencies();
+  // Broadcasts ainda não são persistidos: mantemos apenas em memória até termos a tabela.
+  const [items, setItems] = useState<Broadcast[]>([]);
   const [status, setStatus] = useState<BroadcastStatus | "all">("all");
   const [composing, setComposing] = useState<Broadcast | null>(null);
   const [creating, setCreating] = useState(false);
@@ -114,12 +116,13 @@ function BroadcastsPage() {
               </div>
             );
           })}
-          {filtered.length === 0 && <div className="py-12 text-center text-sm text-muted-foreground">Sem comunicados neste filtro.</div>}
+          {filtered.length === 0 && <div className="py-12 text-center text-sm text-muted-foreground">Nenhum comunicado.</div>}
         </div>
       </Card>
 
       {(composing || creating) && (
         <ComposeDrawer
+          agencies={agencies}
           broadcast={composing}
           onClose={() => { setComposing(null); setCreating(false); }}
           onSave={(b) => { upsert(b); setComposing(null); setCreating(false); }}
@@ -142,7 +145,9 @@ function MiniStat({ label, value, icon, tone }: { label: string; value: number; 
   );
 }
 
-function ComposeDrawer({ broadcast, onClose, onSave }: { broadcast: Broadcast | null; onClose: () => void; onSave: (b: Broadcast) => void }) {
+type AgencyOption = { id: string; name: string; logo_url: string | null; country: string | null };
+
+function ComposeDrawer({ agencies, broadcast, onClose, onSave }: { agencies: AgencyOption[]; broadcast: Broadcast | null; onClose: () => void; onSave: (b: Broadcast) => void }) {
   const [title, setTitle] = useState(broadcast?.title ?? "");
   const [message, setMessage] = useState(broadcast?.message ?? "");
   const [priority, setPriority] = useState<BroadcastPriority>(broadcast?.priority ?? "info");
@@ -160,7 +165,7 @@ function ComposeDrawer({ broadcast, onClose, onSave }: { broadcast: Broadcast | 
     scheduled_at: status === "scheduled" && scheduledAt ? new Date(scheduledAt).toISOString() : null,
     sent_at: status === "sent" ? new Date().toISOString() : broadcast?.sent_at ?? null,
     created_at: broadcast?.created_at ?? new Date().toISOString(),
-    reach: target === "all" ? mockAgencies.length : audience.length,
+    reach: target === "all" ? agencies.length : audience.length,
   });
 
   const canSubmit = title.trim() && message.trim() && (target === "all" || audience.length > 0);
@@ -206,7 +211,7 @@ function ComposeDrawer({ broadcast, onClose, onSave }: { broadcast: Broadcast | 
             <div className="mt-1.5 grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setTarget("all")} className={cn("rounded-lg border p-3 text-left text-xs transition", target === "all" ? "border-primary/60 bg-primary/10 text-foreground" : "border-border bg-card/60")}>
                 <div className="text-sm font-semibold">Todas as agências</div>
-                <div className="mt-0.5 text-[11px] text-muted-foreground">{mockAgencies.length} destinatários</div>
+                <div className="mt-0.5 text-[11px] text-muted-foreground">{agencies.length} destinatários</div>
               </button>
               <button type="button" onClick={() => setTarget("selected")} className={cn("rounded-lg border p-3 text-left text-xs transition", target === "selected" ? "border-primary/60 bg-primary/10 text-foreground" : "border-border bg-card/60")}>
                 <div className="text-sm font-semibold">Selecionar agências</div>
@@ -216,12 +221,13 @@ function ComposeDrawer({ broadcast, onClose, onSave }: { broadcast: Broadcast | 
 
             {target === "selected" && (
               <div className="mt-3 max-h-56 space-y-1 overflow-y-auto rounded-lg border border-border bg-background/40 p-2">
-                {mockAgencies.map((a) => (
+                {agencies.length === 0 && <div className="p-4 text-center text-xs text-muted-foreground">Nenhuma agência cadastrada.</div>}
+                {agencies.map((a) => (
                   <label key={a.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-card">
                     <input type="checkbox" checked={audience.includes(a.id)} onChange={() => toggle(a.id)} className="h-4 w-4 accent-primary" />
-                    <img src={a.logo_url ?? ""} className="h-6 w-6 rounded" alt="" />
+                    <Avatar src={a.logo_url} name={a.name} size={24} rounded="md" />
                     <span className="flex-1 truncate">{a.name}</span>
-                    <span className="text-[10px] text-muted-foreground">{a.country}</span>
+                    <span className="text-[10px] text-muted-foreground">{a.country ?? ""}</span>
                   </label>
                 ))}
               </div>
