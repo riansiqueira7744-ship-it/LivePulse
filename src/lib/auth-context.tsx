@@ -8,7 +8,8 @@ import { ROLE_ROUTES, ROLE_PERMISSIONS, type Permission } from "@/lib/constants"
 // Public API kept compatible with previous mock implementation so consumers
 // don't change.
 
-livepulse_id: string | null;
+  role: UserRole;
+  livepulse_id: string | null;
   id: string;
   email: string;
   name: string;
