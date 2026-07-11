@@ -2,7 +2,7 @@ import { Link, Outlet, useRouterState, createFileRoute, useNavigate } from "@tan
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, UserCog, Wallet, Percent, Target, Trophy,
-  Sparkles, FileBarChart, MessageSquare, Settings, User, Bell, Search,
+  Sparkles, FileBarChart, MessageSquare, Settings, User, Bell, Search, Mail,
   ChevronLeft, ChevronRight, LogOut, Zap, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
