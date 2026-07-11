@@ -96,7 +96,7 @@ function HostsPage() {
                 <tr key={h.id} className="transition hover:bg-background/40">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <img src={h.avatar_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${h.id}`} alt="" className="h-9 w-9 rounded-full" />
+                      <Avatar src={h.avatar_url} name={h.nickname} size={36} />
                       <span className="truncate font-medium">{h.nickname}</span>
                     </div>
                   </td>
