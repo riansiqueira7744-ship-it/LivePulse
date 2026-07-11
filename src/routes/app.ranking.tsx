@@ -77,7 +77,7 @@ function RankingPage() {
               {rest.map((h, i) => (
                 <div key={h.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/30 p-3 transition hover:bg-background/60">
                   <div className="w-8 text-center font-display text-lg font-semibold text-muted-foreground">#{i + 4}</div>
-                  <img src={h.avatar_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${h.id}`} className="h-9 w-9 rounded-full" alt="" />
+                  <Avatar src={h.avatar_url} name={h.nickname} size={36} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{h.nickname}</div>
                     <div className="text-xs text-muted-foreground">{h.category ?? "—"}</div>
