@@ -17,7 +17,8 @@ const ALL_STATUSES: AgencyStatus[] = ["active", "trial", "suspended", "canceled"
 const ALL_PLANS: PlanTier[] = ["starter", "growth", "scale", "enterprise"];
 
 const uiStatus = (s: DbSubscription["status"]): AgencyStatus =>
-  s === "cancelled" ? "canceled" : s === "past_due" ? "suspended" : s as AgencyStatus;
+  s === "cancelled" ? "canceled" : s === "past_due" ? "suspended" : s === "awaiting_payment" ? "trial" : s as AgencyStatus;
+const statusLabelOf = (s: DbSubscription["status"]) => s === "awaiting_payment" ? "Aguardando pagamento" : AGENCY_STATUS_LABELS[uiStatus(s)];
 
 function SubscriptionsPage() {
   const { data: subs = [] } = useSubscriptions();
