@@ -95,7 +95,7 @@ function AgenciesPage() {
                 <tr key={a.id} className="group border-b border-border/50 last:border-0 hover:bg-card/50">
                   <td className="py-3 pr-3">
                     <div className="flex items-center gap-3">
-                      <img src={a.logo_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${a.slug}`} className="h-9 w-9 rounded-lg border border-border" alt="" />
+                      <Avatar src={a.logo_url} name={a.name} size={36} rounded="lg" className="border border-border" />
                       <div className="min-w-0">
                         <div className="truncate font-medium">{a.name}</div>
                         <div className="truncate text-xs text-muted-foreground">/{a.slug}</div>
