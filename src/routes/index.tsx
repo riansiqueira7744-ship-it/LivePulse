@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Zap, Users, Wallet, Sparkles, MessageSquare, Trophy, Target,
-  ArrowRight, Check, Star, ChevronRight, Play, Shield, TrendingUp, BarChart3,
+  ArrowRight, Check, ChevronRight, Play, Shield, TrendingUp, BarChart3,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   component: Landing,
