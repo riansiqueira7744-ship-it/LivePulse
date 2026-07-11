@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Avatar } from "@/components/avatar";
 import { useState } from "react";
-import { Card, PageHeader, currency } from "@/components/app-shell";
+import { Card, PageHeader } from "@/components/app-shell";
 import { useHosts, useCreateHost, useUpdateHost, useDeleteHost, useManagers, type DbHost } from "@/hooks/use-data";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
