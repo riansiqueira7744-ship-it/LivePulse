@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Avatar } from "@/components/avatar";
 import { useMemo, useState } from "react";
 import { Card, PageHeader, currency } from "@/components/app-shell";
 import { useHosts } from "@/hooks/use-data";

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Avatar } from "@/components/avatar";
 import { useMemo } from "react";
 import { Wallet, TrendingUp, Users, Target } from "lucide-react";
 import { Card, PageHeader, StatCard, currency } from "@/components/app-shell";

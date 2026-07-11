@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Avatar } from "@/components/avatar";
 import { Card, PageHeader, StatCard, currency } from "@/components/app-shell";
 import { useAgencies, useSubscriptions } from "@/hooks/use-data";
 import { AGENCY_STATUS_LABELS, PLAN_LABELS } from "@/lib/constants";
