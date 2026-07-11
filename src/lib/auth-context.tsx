@@ -7,13 +7,13 @@ import { ROLE_ROUTES, ROLE_PERMISSIONS, type Permission } from "@/lib/constants"
 // Real auth backed by Lovable Cloud. Loads profile + role + agency on session.
 // Public API kept compatible with previous mock implementation so consumers
 // don't change.
-
 export interface AuthUser {
   id: string;
   email: string;
   name: string;
   avatar_url: string | null;
   role: UserRole;
+  livepulse_id: string | null;
   agency_id: string | null;
   whatsapp: string | null;
   country: string | null;
@@ -61,6 +61,7 @@ async function loadContext(userId: string, email: string): Promise<{ user: AuthU
     name: profile?.name ?? email.split("@")[0],
     avatar_url: profile?.avatar_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${userId}`,
     role,
+    livepulse_id: (profile as { livepulse_id?: string | null } | null)?.livepulse_id ?? null,
     agency_id: profile?.agency_id ?? null,
     whatsapp: profile?.whatsapp ?? null,
     country: profile?.country ?? null,

@@ -16,7 +16,7 @@ export type DbAgency = {
 export type DbSubscription = {
   id: string; agency_id: string;
   plan: DbAgency["plan"];
-  status: "active" | "trial" | "suspended" | "cancelled" | "past_due";
+  status: "active" | "trial" | "suspended" | "cancelled" | "past_due" | "awaiting_payment";
   price_monthly: number; currency: string; seats: number;
   trial_ends_at: string | null; current_period_end: string | null;
 };

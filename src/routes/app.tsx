@@ -2,7 +2,7 @@ import { Link, Outlet, useRouterState, createFileRoute, useNavigate } from "@tan
 import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, UserCog, Wallet, Percent, Target, Trophy,
-  Sparkles, FileBarChart, MessageSquare, Settings, User, Bell, Search,
+  Sparkles, FileBarChart, MessageSquare, Settings, User, Bell, Search, Mail,
   ChevronLeft, ChevronRight, LogOut, Zap, Crown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ const nav = [
   { to: "/app/ai", label: "IA", icon: Sparkles, badge: "Novo" },
   { to: "/app/reports", label: "Relatórios", icon: FileBarChart },
   { to: "/app/notifications", label: "Notificações", icon: Bell },
+  { to: "/app/invites", label: "Convites", icon: Mail },
   { to: "/app/community", label: "Comunidade", icon: MessageSquare },
 ] as const;
 

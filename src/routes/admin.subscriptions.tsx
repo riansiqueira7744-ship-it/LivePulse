@@ -17,7 +17,8 @@ const ALL_STATUSES: AgencyStatus[] = ["active", "trial", "suspended", "canceled"
 const ALL_PLANS: PlanTier[] = ["starter", "growth", "scale", "enterprise"];
 
 const uiStatus = (s: DbSubscription["status"]): AgencyStatus =>
-  s === "cancelled" ? "canceled" : s === "past_due" ? "suspended" : s as AgencyStatus;
+  s === "cancelled" ? "canceled" : s === "past_due" ? "suspended" : s === "awaiting_payment" ? "trial" : s as AgencyStatus;
+const statusLabelOf = (s: DbSubscription["status"]) => s === "awaiting_payment" ? "Aguardando pagamento" : AGENCY_STATUS_LABELS[uiStatus(s)];
 
 function SubscriptionsPage() {
   const { data: subs = [] } = useSubscriptions();
@@ -87,13 +88,25 @@ function SubscriptionsPage() {
                       <span className={cn(
                         "rounded-md px-2 py-0.5 text-[11px] font-semibold",
                         s.status === "active" ? "bg-success/15 text-success"
+                          : s.status === "awaiting_payment" ? "bg-warning/15 text-warning"
                           : s.status === "trial" ? "bg-primary/15 text-primary"
                           : s.status === "suspended" ? "bg-warning/15 text-warning"
                           : "bg-destructive/15 text-destructive"
-                      )}>{AGENCY_STATUS_LABELS[uiStatus(s.status)]}</span>
+                      )}>{statusLabelOf(s.status)}</span>
                     </td>
                     <td className="py-3 pr-3">
                       <div className="flex items-center justify-end gap-1">
+                        {s.status === "awaiting_payment" && (
+                          <button
+                            onClick={async () => {
+                              const { supabase } = await import("@/integrations/supabase/client");
+                              const { error } = await supabase.rpc("confirm_subscription_payment", { _subscription_id: s.id });
+                              if (error) toast.error(error.message); else { toast.success("Pagamento confirmado"); location.reload(); }
+                            }}
+                            className="inline-flex items-center gap-1 rounded-md border border-success/50 bg-success/10 px-2 py-1 text-[11px] font-semibold text-success hover:bg-success/20">
+                            <Play className="h-3 w-3" /> Confirmar pagamento
+                          </button>
+                        )}
                         <button onClick={() => setEditing(s)} className="inline-flex items-center gap-1 rounded-md border border-border bg-card/60 px-2 py-1 text-[11px] font-semibold hover:border-primary/50">
                           <Edit className="h-3 w-3" /> Editar
                         </button>

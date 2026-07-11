@@ -1,128 +1,79 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { Zap, Mail, Lock, User, Building2, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Zap, User, Building2, ArrowRight, Check } from "lucide-react";
 
 export const Route = createFileRoute("/signup")({
-  component: SignupPage,
+  component: SignupChoice,
   head: () => ({ meta: [{ title: "Criar conta — Livepulse" }] }),
 });
 
-function slugify(s: string) {
-  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || `agencia-${Date.now()}`;
-}
-
-function SignupPage() {
-  const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [agencyName, setAgencyName] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin + "/app/dashboard",
-          data: { name },
-        },
-      });
-      if (error) throw error;
-      const userId = data.user?.id;
-      if (!userId) { toast.info("Verifique seu e-mail para confirmar a conta."); navigate({ to: "/login" }); return; }
-
-      // Wait for a session (project may not require email confirmation)
-      const session = data.session ?? (await supabase.auth.getSession()).data.session;
-      if (!session) {
-        toast.info("Cadastro criado. Confirme seu e-mail para acessar.");
-        navigate({ to: "/login" });
-        return;
-      }
-
-      // Create the agency
-      const slug = slugify(agencyName);
-      const { data: agency, error: agencyErr } = await supabase.from("agencies").insert({
-        name: agencyName, slug, status: "trial", plan: "starter", owner_id: userId,
-      }).select().single();
-      if (agencyErr) throw agencyErr;
-
-      // Link profile to agency
-      await supabase.from("profiles").update({ agency_id: agency.id, name }).eq("id", userId);
-
-      // Assign owner role
-      const { error: roleErr } = await supabase.from("user_roles").insert({
-        user_id: userId, role: "agency_owner", agency_id: agency.id,
-      });
-      if (roleErr) throw roleErr;
-
-      // Bootstrap subscription
-      await supabase.from("subscriptions").insert({
-        agency_id: agency.id, plan: "starter", status: "trial", price_monthly: 0, seats: 5,
-      });
-
-      toast.success(`Agência "${agencyName}" criada!`);
-      navigate({ to: "/app/dashboard" });
-    } catch (err: any) {
-      toast.error(err.message ?? "Falha ao criar conta");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+function SignupChoice() {
   return (
-    <div className="mesh-bg relative grid min-h-screen lg:grid-cols-2">
-      <div className="flex items-center justify-center p-6 md:p-12">
-        <div className="w-full max-w-sm">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-chart-2 shadow-[0_8px_24px_-8px] shadow-primary/60">
-              <Zap className="h-4.5 w-4.5 text-primary-foreground" strokeWidth={2.5} />
-            </div>
-            <span className="font-display text-lg font-semibold">Livepulse</span>
-          </Link>
+    <div className="mesh-bg min-h-screen">
+      <div className="mx-auto max-w-5xl px-6 py-16">
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-chart-2 shadow-[0_8px_24px_-8px] shadow-primary/60">
+            <Zap className="h-4.5 w-4.5 text-primary-foreground" strokeWidth={2.5} />
+          </div>
+          <span className="font-display text-lg font-semibold">Livepulse</span>
+        </Link>
 
-          <h1 className="mt-10 font-display text-3xl font-semibold tracking-tight">Crie sua agência</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Comece grátis. Sem cartão de crédito.</p>
-
-          <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-            <Field icon={<User className="h-4 w-4" />} label="Seu nome" value={name} onChange={setName} required />
-            <Field icon={<Building2 className="h-4 w-4" />} label="Nome da agência" value={agencyName} onChange={setAgencyName} required />
-            <Field icon={<Mail className="h-4 w-4" />} label="E-mail" type="email" value={email} onChange={setEmail} required />
-            <Field icon={<Lock className="h-4 w-4" />} label="Senha" type="password" value={password} onChange={setPassword} required />
-
-            <button type="submit" disabled={submitting} className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60">
-              {submitting ? "Criando…" : <>Criar conta <ArrowRight className="h-4 w-4" /></>}
-            </button>
-          </form>
-
-          <p className="mt-8 text-center text-xs text-muted-foreground">
-            Já tem conta? <Link to="/login" className="text-primary hover:underline">Entrar</Link>
-          </p>
+        <div className="mt-14 text-center">
+          <h1 className="font-display text-4xl font-semibold tracking-tight">Como você quer começar?</h1>
+          <p className="mt-3 text-sm text-muted-foreground">Escolha o tipo de conta ideal para você</p>
         </div>
-      </div>
 
-      <div className="relative hidden overflow-hidden border-l border-border/60 lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-chart-2/10 to-transparent" />
-        <div className="absolute inset-0 mesh-bg opacity-60" />
+        <div className="mt-12 grid gap-6 md:grid-cols-2">
+          <Card
+            to="/signup/host"
+            icon={<User className="h-5 w-5" />}
+            badge="Grátis"
+            title="Sou Host"
+            desc="Crie sua conta gratuita, receba seu Livepulse ID e conecte-se a uma agência."
+            perks={["Cadastro 100% grátis", "Livepulse ID único e permanente", "Receba convites de agências", "Perfil profissional"]}
+            cta="Criar conta grátis"
+          />
+          <Card
+            to="/signup/agency"
+            icon={<Building2 className="h-5 w-5" />}
+            badge="Assinatura"
+            title="Sou uma Agência"
+            desc="Gerencie hosts, gerentes, metas, comissões e financeiro em um só lugar."
+            perks={["Painel completo de gestão", "Gerentes ilimitados no plano", "Financeiro e comissões", "Suporte dedicado"]}
+            cta="Criar agência"
+            highlight
+          />
+        </div>
+
+        <p className="mt-10 text-center text-xs text-muted-foreground">
+          Já tem conta? <Link to="/login" className="text-primary hover:underline">Entrar</Link>
+        </p>
       </div>
     </div>
   );
 }
 
-function Field({ label, value, onChange, icon, type = "text", required }: { label: string; value: string; onChange: (v: string) => void; icon: React.ReactNode; type?: string; required?: boolean }) {
+function Card({ to, icon, title, desc, perks, cta, badge, highlight }: { to: string; icon: React.ReactNode; title: string; desc: string; perks: string[]; cta: string; badge: string; highlight?: boolean }) {
   return (
-    <div>
-      <label className="text-xs font-medium text-muted-foreground">{label}</label>
-      <div className="relative mt-1.5">
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>
-        <input required={required} type={type} value={value} onChange={(e) => onChange(e.target.value)} className="h-11 w-full rounded-xl border border-border bg-card/60 pl-10 pr-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+    <Link
+      to={to}
+      className={`group relative flex flex-col rounded-2xl border p-6 transition hover:-translate-y-0.5 ${highlight ? "border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card shadow-glow" : "border-border bg-card/60 hover:border-primary/40"}`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="grid h-11 w-11 place-items-center rounded-xl bg-primary/15 text-primary">{icon}</div>
+        <span className="rounded-md bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">{badge}</span>
       </div>
-    </div>
+      <h3 className="mt-4 font-display text-2xl font-semibold">{title}</h3>
+      <p className="mt-1.5 text-sm text-muted-foreground">{desc}</p>
+      <ul className="mt-5 space-y-2 text-sm">
+        {perks.map((p) => (
+          <li key={p} className="flex items-center gap-2 text-muted-foreground">
+            <Check className="h-3.5 w-3.5 text-success" /> {p}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-primary group-hover:gap-2 transition-all">
+        {cta} <ArrowRight className="h-4 w-4" />
+      </div>
+    </Link>
   );
 }

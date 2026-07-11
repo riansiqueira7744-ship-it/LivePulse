@@ -53,12 +53,12 @@ export const ROLE_ROUTES: Record<UserRole, string[]> = {
     "/app/community", "/app/chat", "/app/gamification", "/app/livecoins",
     "/app/store", "/app/seasons", "/app/files", "/app/calendar",
     "/app/notifications", "/app/settings", "/app/profile", "/app/ai",
-    "/app/reports",
+    "/app/reports", "/app/invites",
   ],
   host: [
     "/app/dashboard", "/app/goals", "/app/ranking", "/app/community",
     "/app/chat", "/app/gamification", "/app/livecoins", "/app/store",
-    "/app/seasons", "/app/files", "/app/calendar",
+    "/app/seasons", "/app/files", "/app/calendar", "/app/invites",
     "/app/notifications", "/app/profile", "/app/settings",
   ],
 };

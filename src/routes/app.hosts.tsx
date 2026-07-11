@@ -35,6 +35,7 @@ function HostsPage() {
   const [cat, setCat] = useState<string>("Todas");
   const [editing, setEditing] = useState<DbHost | null>(null);
   const [creating, setCreating] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const [menu, setMenu] = useState<string | null>(null);
 
   const cats = ["Todas", ...Array.from(new Set(hosts.map((h) => h.category).filter(Boolean) as string[]))];
@@ -51,9 +52,14 @@ function HostsPage() {
         title="Hosts"
         description={`${scopeLabel} · ${hosts.length} cadastrados`}
         actions={can("hosts:manage") ? (
-          <button onClick={() => setCreating(true)} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
-            <Plus className="mr-1 inline h-3.5 w-3.5" /> Novo host
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setInviting(true)} className="rounded-lg border border-border bg-card/60 px-3 py-1.5 text-xs font-semibold hover:border-primary/50">
+              <Search className="mr-1 inline h-3.5 w-3.5" /> Convidar por Livepulse ID
+            </button>
+            <button onClick={() => setCreating(true)} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+              <Plus className="mr-1 inline h-3.5 w-3.5" /> Novo host
+            </button>
+          </div>
         ) : null}
       />
 
@@ -136,6 +142,76 @@ function HostsPage() {
           }}
         />
       )}
+
+      {inviting && currentAgency && (
+        <InviteModal agencyId={currentAgency.id} onClose={() => setInviting(false)} />
+      )}
+    </div>
+  );
+}
+
+function InviteModal({ agencyId, onClose }: { agencyId: string; onClose: () => void }) {
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<Array<{ id: string; name: string | null; livepulse_id: string | null; country: string | null; city: string | null; platform: string | null }>>([]);
+  const [msg, setMsg] = useState("");
+  const [searching, setSearching] = useState(false);
+
+  const search = async () => {
+    if (!q.trim()) return;
+    setSearching(true);
+    // Import lazily to avoid pulling into initial bundle
+    const { supabase } = await import("@/integrations/supabase/client");
+    const term = q.trim();
+    const { data } = await supabase.from("profiles")
+      .select("id,name,livepulse_id,country,city,platform,agency_id,email,whatsapp")
+      .is("agency_id", null)
+      .or(`livepulse_id.eq.${term},name.ilike.%${term}%,email.ilike.%${term}%,whatsapp.ilike.%${term}%`)
+      .limit(10);
+    setResults((data ?? []) as never);
+    setSearching(false);
+  };
+
+  const invite = async (hostUserId: string, livepulseId: string | null) => {
+    if (!livepulseId) { toast.error("Este perfil não possui Livepulse ID"); return; }
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.from("invitations").insert({
+      agency_id: agencyId, host_user_id: hostUserId, livepulse_id: livepulseId, message: msg || null,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Convite enviado!");
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-2xl border border-border bg-background p-6 shadow-2xl">
+        <h2 className="font-display text-xl font-semibold">Convidar Host</h2>
+        <p className="mt-1 text-xs text-muted-foreground">Pesquise por Livepulse ID (ex: LP-H-XXXXXX), nome, e-mail ou WhatsApp.</p>
+
+        <div className="mt-4 flex gap-2">
+          <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} placeholder="LP-H-XXXXXX" className="h-10 flex-1 rounded-lg border border-border bg-background/40 px-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+          <button onClick={search} disabled={searching} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Pesquisar</button>
+        </div>
+
+        <input value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Mensagem (opcional)" className="mt-3 h-10 w-full rounded-lg border border-border bg-background/40 px-3 text-sm" />
+
+        <div className="mt-4 max-h-64 space-y-2 overflow-y-auto">
+          {results.length === 0 && !searching && <div className="py-6 text-center text-xs text-muted-foreground">Nenhum resultado. Digite um termo e pesquise.</div>}
+          {results.map((r) => (
+            <div key={r.id} className="flex items-center justify-between rounded-lg border border-border bg-card/60 p-3">
+              <div className="min-w-0">
+                <div className="truncate text-sm font-semibold">{r.name ?? "—"}</div>
+                <div className="text-[11px] text-muted-foreground">{r.livepulse_id} · {r.platform ?? "—"} · {r.country ?? "—"}</div>
+              </div>
+              <button onClick={() => invite(r.id, r.livepulse_id)} className="rounded-md bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground">Convidar</button>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 flex justify-end">
+          <button onClick={onClose} className="rounded-lg border border-border px-3 py-1.5 text-xs">Fechar</button>
+        </div>
+      </div>
     </div>
   );
 }
