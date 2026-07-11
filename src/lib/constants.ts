@@ -31,19 +31,28 @@ export const NOTIFICATION_TONE: Record<NotificationLevel, string> = {
   danger: "bg-destructive/15 text-destructive",
 };
 
-export const PLAN_LABELS: Record<PlanTier, string> = {
+export const PLAN_LABELS: Record<string, string> = {
   starter: "Starter",
   growth: "Growth",
   scale: "Scale",
   enterprise: "Enterprise",
+  mensal: "Mensal",
+  trimestral: "Trimestral",
+  semestral: "Semestral",
+  anual: "Anual",
+  founder: "Founder Vitalício",
 };
 
-export const AGENCY_STATUS_LABELS: Record<AgencyStatus, string> = {
+export const AGENCY_STATUS_LABELS: Record<string, string> = {
   active: "Ativa",
   trial: "Teste",
+  pending: "Aguardando pagamento",
   suspended: "Suspensa",
   canceled: "Cancelada",
+  cancelled: "Cancelada",
 };
+
+export const WHATSAPP_SUPPORT = "5554994896776";
 
 // Route access map for role-based guarding.
 export const ROLE_ROUTES: Record<UserRole, string[]> = {
