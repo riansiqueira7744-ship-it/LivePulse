@@ -98,7 +98,7 @@ function SubscriptionsPage() {
                           <button
                             onClick={async () => {
                               const { supabase } = await import("@/integrations/supabase/client");
-                              const { error } = await supabase.rpc("confirm_subscription_payment", { _subscription_id: s.id, _notes: null });
+                              const { error } = await supabase.rpc("confirm_subscription_payment", { _subscription_id: s.id });
                               if (error) toast.error(error.message); else { toast.success("Pagamento confirmado"); location.reload(); }
                             }}
                             className="inline-flex items-center gap-1 rounded-md border border-success/50 bg-success/10 px-2 py-1 text-[11px] font-semibold text-success hover:bg-success/20">
