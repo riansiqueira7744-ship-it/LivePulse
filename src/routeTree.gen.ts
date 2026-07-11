@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as SignupHostRouteImport } from './routes/signup.host'
+import { Route as SignupAgencyRouteImport } from './routes/signup.agency'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppRankingRouteImport } from './routes/app.ranking'
@@ -86,6 +87,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const SignupHostRoute = SignupHostRouteImport.update({
   id: '/host',
   path: '/host',
+  getParentRoute: () => SignupRoute,
+} as any)
+const SignupAgencyRoute = SignupAgencyRouteImport.update({
+  id: '/agency',
+  path: '/agency',
   getParentRoute: () => SignupRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -205,6 +211,7 @@ export interface FileRoutesByFullPath {
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/signup/agency': typeof SignupAgencyRoute
   '/signup/host': typeof SignupHostRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/signup/agency': typeof SignupAgencyRoute
   '/signup/host': typeof SignupHostRoute
   '/admin': typeof AdminIndexRoute
   '/app': typeof AppIndexRoute
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/app/ranking': typeof AppRankingRoute
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
+  '/signup/agency': typeof SignupAgencyRoute
   '/signup/host': typeof SignupHostRoute
   '/admin/': typeof AdminIndexRoute
   '/app/': typeof AppIndexRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/app/ranking'
     | '/app/reports'
     | '/app/settings'
+    | '/signup/agency'
     | '/signup/host'
     | '/admin/'
     | '/app/'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/app/ranking'
     | '/app/reports'
     | '/app/settings'
+    | '/signup/agency'
     | '/signup/host'
     | '/admin'
     | '/app'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/app/ranking'
     | '/app/reports'
     | '/app/settings'
+    | '/signup/agency'
     | '/signup/host'
     | '/admin/'
     | '/app/'
@@ -439,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/host'
       fullPath: '/signup/host'
       preLoaderRoute: typeof SignupHostRouteImport
+      parentRoute: typeof SignupRoute
+    }
+    '/signup/agency': {
+      id: '/signup/agency'
+      path: '/agency'
+      fullPath: '/signup/agency'
+      preLoaderRoute: typeof SignupAgencyRouteImport
       parentRoute: typeof SignupRoute
     }
     '/app/settings': {
@@ -627,10 +646,12 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface SignupRouteChildren {
+  SignupAgencyRoute: typeof SignupAgencyRoute
   SignupHostRoute: typeof SignupHostRoute
 }
 
 const SignupRouteChildren: SignupRouteChildren = {
+  SignupAgencyRoute: SignupAgencyRoute,
   SignupHostRoute: SignupHostRoute,
 }
 
