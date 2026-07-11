@@ -156,10 +156,10 @@ function AppLayout() {
             {!collapsed && (
               <div className="mt-3 rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3">
                 <div className="flex items-center gap-3">
-                  <img src={user.avatar_url ?? ""} alt="" className="h-9 w-9 rounded-full" />
+                  <Avatar src={user.avatar_url} name={user.name} size={36} />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{user.name}</div>
-                    <div className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]} · Livepulse</div>
+                    <div className="truncate text-sm font-semibold">{user.name || user.email}</div>
+                    <div className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]}</div>
                   </div>
                   <button
                     onClick={async () => { await signOut(); navigate({ to: "/login" }); }}
