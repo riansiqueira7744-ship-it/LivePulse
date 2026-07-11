@@ -114,6 +114,13 @@ export type Database = {
             foreignKeyName: "commissions_host_id_fkey"
             columns: ["host_id"]
             isOneToOne: false
+            referencedRelation: "host_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commissions_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
             referencedRelation: "hosts"
             referencedColumns: ["id"]
           },
@@ -178,6 +185,13 @@ export type Database = {
             columns: ["agency_id"]
             isOneToOne: false
             referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "host_directory"
             referencedColumns: ["id"]
           },
           {
@@ -254,6 +268,13 @@ export type Database = {
             foreignKeyName: "goals_host_id_fkey"
             columns: ["host_id"]
             isOneToOne: false
+            referencedRelation: "host_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goals_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
             referencedRelation: "hosts"
             referencedColumns: ["id"]
           },
@@ -261,7 +282,7 @@ export type Database = {
       }
       hosts: {
         Row: {
-          agency_id: string
+          agency_id: string | null
           avatar_url: string | null
           category: string | null
           city: string | null
@@ -277,6 +298,7 @@ export type Database = {
           manager_id: string | null
           nickname: string
           platform: Database["public"]["Enums"]["host_platform"]
+          platform_user_id: string | null
           score: number
           status: Database["public"]["Enums"]["host_status"]
           updated_at: string
@@ -284,7 +306,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
-          agency_id: string
+          agency_id?: string | null
           avatar_url?: string | null
           category?: string | null
           city?: string | null
@@ -300,6 +322,7 @@ export type Database = {
           manager_id?: string | null
           nickname: string
           platform?: Database["public"]["Enums"]["host_platform"]
+          platform_user_id?: string | null
           score?: number
           status?: Database["public"]["Enums"]["host_status"]
           updated_at?: string
@@ -307,7 +330,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
-          agency_id?: string
+          agency_id?: string | null
           avatar_url?: string | null
           category?: string | null
           city?: string | null
@@ -323,6 +346,7 @@ export type Database = {
           manager_id?: string | null
           nickname?: string
           platform?: Database["public"]["Enums"]["host_platform"]
+          platform_user_id?: string | null
           score?: number
           status?: Database["public"]["Enums"]["host_status"]
           updated_at?: string
@@ -640,6 +664,13 @@ export type Database = {
             foreignKeyName: "rankings_host_id_fkey"
             columns: ["host_id"]
             isOneToOne: false
+            referencedRelation: "host_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rankings_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
             referencedRelation: "hosts"
             referencedColumns: ["id"]
           },
@@ -744,7 +775,50 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      host_directory: {
+        Row: {
+          agency_id: string | null
+          agency_name: string | null
+          avatar_url: string | null
+          category: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          earnings_total: number | null
+          email: string | null
+          gifts_total: number | null
+          id: string | null
+          joined_at: string | null
+          live_hours: number | null
+          livepulse_id: string | null
+          manager_id: string | null
+          manager_name: string | null
+          nickname: string | null
+          platform: string | null
+          platform_user_id: string | null
+          score: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          whatsapp: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hosts_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hosts_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "managers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       accept_invitation: { Args: { _invitation_id: string }; Returns: string }
@@ -767,6 +841,17 @@ export type Database = {
       }
       is_agency_owner_of: { Args: { _agency_id: string }; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      search_unaffiliated_host_by_livepulse_id: {
+        Args: { _livepulse_id: string }
+        Returns: {
+          city: string
+          country: string
+          id: string
+          livepulse_id: string
+          name: string
+          platform: string
+        }[]
+      }
     }
     Enums: {
       agency_plan: "starter" | "growth" | "scale" | "enterprise"
