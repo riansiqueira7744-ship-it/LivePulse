@@ -51,8 +51,8 @@ function Nav() {
         </nav>
         <div className="flex items-center gap-2">
           <Link to="/login" className="hidden rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground md:block">Entrar</Link>
-          <Link to="/app/dashboard" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-[0_4px_16px_-4px] shadow-primary/50 hover:opacity-90">
-            Demonstração <ArrowRight className="h-3.5 w-3.5" />
+          <Link to="/signup" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-[0_4px_16px_-4px] shadow-primary/50 hover:opacity-90">
+            Criar conta <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </div>
