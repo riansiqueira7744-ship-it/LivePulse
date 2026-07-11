@@ -43,6 +43,10 @@ export type DbHost = {
   manager_name: string | null;
 };
 
+function operationalHost(row: Omit<DbHost, "agency_name" | "manager_name" | "manager">): DbHost {
+  return { ...row, agency_name: null, manager_name: null, manager: null };
+}
+
 export type DbGoal = {
   id: string; agency_id: string; host_id: string | null;
   title: string; description: string | null;
@@ -147,12 +151,12 @@ export const hostsService = {
   create: async (payload: Partial<DbHost> & { agency_id: string; nickname: string }) => {
     const { data, error } = await supabase.from("hosts").insert(payload as any).select().single();
     if (error) throw error;
-    return data as DbHost;
+    return operationalHost(data);
   },
   update: async (id: string, patch: Partial<DbHost>) => {
     const { data, error } = await supabase.from("hosts").update(patch as any).eq("id", id).select().single();
     if (error) throw error;
-    return data as DbHost;
+    return operationalHost(data);
   },
   remove: async (id: string) => {
     const { error } = await supabase.from("hosts").delete().eq("id", id);
