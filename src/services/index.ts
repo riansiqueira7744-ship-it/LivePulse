@@ -29,16 +29,23 @@ export type DbManager = {
 };
 
 export type DbHost = {
-  id: string; agency_id: string; user_id: string | null; manager_id: string | null;
+  id: string; agency_id: string | null; user_id: string | null; manager_id: string | null;
   nickname: string; email: string | null; whatsapp: string | null;
   avatar_url: string | null;
   platform: "tiktok" | "kwai" | "bigo" | "other";
+  platform_user_id: string | null;
   category: string | null; country: string | null; city: string | null;
   status: "active" | "inactive" | "pending";
   live_hours: number; gifts_total: number; earnings_total: number;
-  score: number; joined_at: string | null; created_at: string;
+  score: number; joined_at: string | null; created_at: string; livepulse_id: string | null;
+  agency_name: string | null;
   manager?: { name: string } | null;
+  manager_name: string | null;
 };
+
+function operationalHost(row: Omit<DbHost, "agency_name" | "manager_name" | "manager">): DbHost {
+  return { ...row, agency_name: null, manager_name: null, manager: null };
+}
 
 export type DbGoal = {
   id: string; agency_id: string; host_id: string | null;
@@ -122,21 +129,34 @@ export const subscriptionsService = {
 // ---------- HOSTS ----------
 export const hostsService = {
   list: async () => {
-    const { data, error } = await supabase.from("hosts")
-      .select("*, manager:managers(name)")
+    const { data, error } = await supabase.from("host_directory")
+      .select("*")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []) as DbHost[];
+    return (data ?? []).map((row) => ({
+      ...row,
+      id: row.id!,
+      nickname: row.nickname ?? "",
+      platform: (row.platform ?? "other") as DbHost["platform"],
+      status: (row.status ?? "active") as DbHost["status"],
+      live_hours: Number(row.live_hours ?? 0),
+      gifts_total: Number(row.gifts_total ?? 0),
+      earnings_total: Number(row.earnings_total ?? 0),
+      score: Number(row.score ?? 0),
+      created_at: row.created_at ?? "",
+      updated_at: row.updated_at ?? "",
+      manager: row.manager_name ? { name: row.manager_name } : null,
+    })) as DbHost[];
   },
   create: async (payload: Partial<DbHost> & { agency_id: string; nickname: string }) => {
     const { data, error } = await supabase.from("hosts").insert(payload as any).select().single();
     if (error) throw error;
-    return data as DbHost;
+    return operationalHost(data);
   },
   update: async (id: string, patch: Partial<DbHost>) => {
     const { data, error } = await supabase.from("hosts").update(patch as any).eq("id", id).select().single();
     if (error) throw error;
-    return data as DbHost;
+    return operationalHost(data);
   },
   remove: async (id: string) => {
     const { error } = await supabase.from("hosts").delete().eq("id", id);

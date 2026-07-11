@@ -53,6 +53,10 @@ function AppLayout() {
 
   const visibleNav = nav.filter((item) => canAccess(item.to));
 
+  if (!canAccess(path)) {
+    return <div className="mesh-bg grid min-h-screen place-items-center text-sm text-muted-foreground">Acesso não autorizado.</div>;
+  }
+
   return (
     <div className="mesh-bg min-h-screen">
       <div className="flex min-h-screen">

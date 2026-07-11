@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Avatar } from "@/components/avatar";
 import { useState } from "react";
-import { Card, PageHeader, currency } from "@/components/app-shell";
+import { Card, PageHeader } from "@/components/app-shell";
 import { useHosts, useCreateHost, useUpdateHost, useDeleteHost, useManagers, type DbHost } from "@/hooks/use-data";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
-import { Search, Plus, MoreHorizontal, ArrowUpDown, X, Trash2, Edit } from "lucide-react";
+import { Search, Plus, MoreHorizontal, X, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/app/hosts")({
@@ -33,19 +33,34 @@ function HostsPage() {
   const deleteMut = useDeleteHost();
 
   const [q, setQ] = useState("");
-  const [cat, setCat] = useState<string>("Todas");
+  const [scope, setScope] = useState("Todos");
+  const [agencyFilter, setAgencyFilter] = useState("Todas");
+  const [platformFilter, setPlatformFilter] = useState("Todas");
   const [editing, setEditing] = useState<DbHost | null>(null);
   const [creating, setCreating] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [menu, setMenu] = useState<string | null>(null);
 
-  const cats = ["Todas", ...Array.from(new Set(hosts.map((h) => h.category).filter(Boolean) as string[]))];
-  const rows = hosts.filter((h) =>
-    (cat === "Todas" || h.category === cat) &&
-    (q === "" || h.nickname.toLowerCase().includes(q.toLowerCase()))
-  );
+  const agencies = ["Todas", ...Array.from(new Set(hosts.map((h) => h.agency_name).filter(Boolean) as string[]))];
+  const platforms = ["Todas", ...Array.from(new Set(hosts.map((h) => h.platform).filter(Boolean)))];
+  const normalizedQuery = q.trim().toLocaleLowerCase("pt-BR");
+  const rows = hosts.filter((h) => {
+    const matchesScope = scope === "Todos"
+      || (scope === "Sem agência" && !h.agency_id)
+      || (scope === "Com agência" && !!h.agency_id)
+      || (scope === "Ativos" && h.status === "active")
+      || (scope === "Inativos" && h.status === "inactive");
+    const searchable = [h.nickname, h.livepulse_id, h.email, h.whatsapp, h.platform, h.platform_user_id, h.agency_name, statusLabel[h.status]]
+      .filter(Boolean)
+      .join(" ")
+      .toLocaleLowerCase("pt-BR");
+    return matchesScope
+      && (agencyFilter === "Todas" || h.agency_name === agencyFilter)
+      && (platformFilter === "Todas" || h.platform === platformFilter)
+      && (!normalizedQuery || searchable.includes(normalizedQuery));
+  });
 
-  const scopeLabel = user?.role === "manager" ? `Seu time em ${currentAgency?.name ?? ""}` : user?.role === "host" ? "Seu perfil" : (currentAgency?.name ?? "Agência");
+  const scopeLabel = user?.role === "super_admin" ? "Todos os hosts da plataforma" : user?.role === "manager" ? `Seu time em ${currentAgency?.name ?? ""}` : user?.role === "host" ? "Seu perfil" : (currentAgency?.name ?? "Agência");
 
   return (
     <div>
@@ -68,13 +83,19 @@ function HostsPage() {
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <div className="relative min-w-0 flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Buscar por nickname…" className="h-9 w-full rounded-lg border border-border bg-background/50 pl-9 pr-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+            <input value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Buscar por ID, nome, e-mail, WhatsApp…" className="h-9 w-full rounded-lg border border-border bg-background/50 pl-9 pr-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
           </div>
-          <div className="flex items-center gap-1 rounded-lg border border-border bg-background/50 p-1">
-            {cats.map((c)=>(
-              <button key={c} onClick={()=>setCat(c)} className={cn("rounded-md px-2.5 py-1 text-xs font-medium transition", cat === c ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground")}>{c}</button>
+          <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border bg-background/50 p-1">
+            {["Todos", "Sem agência", "Com agência", "Ativos", "Inativos"].map((item)=>(
+              <button key={item} onClick={()=>setScope(item)} className={cn("rounded-md px-2.5 py-1 text-xs font-medium transition", scope === item ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground")}>{item}</button>
             ))}
           </div>
+          <select aria-label="Filtrar por agência" value={agencyFilter} onChange={(e) => setAgencyFilter(e.target.value)} className="h-9 rounded-lg border border-border bg-background/50 px-2 text-xs">
+            {agencies.map((agency) => <option key={agency} value={agency}>Agência: {agency}</option>)}
+          </select>
+          <select aria-label="Filtrar por plataforma" value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)} className="h-9 rounded-lg border border-border bg-background/50 px-2 text-xs">
+            {platforms.map((platform) => <option key={platform} value={platform}>Plataforma: {platform}</option>)}
+          </select>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border/60">
@@ -82,12 +103,12 @@ function HostsPage() {
             <thead className="bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-medium">Host</th>
+                <th className="px-4 py-3 font-medium">Contato</th>
                 <th className="px-4 py-3 font-medium">Plataforma</th>
-                <th className="px-4 py-3 font-medium">Categoria</th>
+                <th className="px-4 py-3 font-medium">Agência</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Gerente</th>
-                <th className="px-4 py-3 text-right font-medium"><button className="inline-flex items-center gap-1">Ganhos <ArrowUpDown className="h-3 w-3" /></button></th>
-                <th className="px-4 py-3 text-right font-medium">Horas</th>
+                <th className="px-4 py-3 font-medium">Cadastro</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -97,15 +118,18 @@ function HostsPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <Avatar src={h.avatar_url} name={h.nickname} size={36} />
-                      <span className="truncate font-medium">{h.nickname}</span>
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{h.nickname}</div>
+                        <div className="text-[11px] text-muted-foreground">{h.livepulse_id ?? "—"}</div>
+                      </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 uppercase text-xs text-muted-foreground">{h.platform}</td>
-                  <td className="px-4 py-3"><span className="rounded-md bg-muted/60 px-2 py-0.5 text-xs">{h.category ?? "—"}</span></td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground"><div>{h.email ?? "—"}</div><div>{h.whatsapp ?? "—"}</div></td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground"><div className="uppercase">{h.platform}</div><div>{h.platform_user_id ?? "—"}</div></td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{h.agency_name ?? "Sem agência"}</td>
                   <td className="px-4 py-3"><span className={cn("rounded-md px-2 py-0.5 text-[11px] font-medium", statusColors[h.status])}>{statusLabel[h.status]}</span></td>
-                  <td className="px-4 py-3 text-muted-foreground">{h.manager?.name ?? "—"}</td>
-                  <td className="px-4 py-3 text-right font-semibold">{currency(Number(h.earnings_total))}</td>
-                  <td className="px-4 py-3 text-right text-muted-foreground">{Number(h.live_hours)}h</td>
+                  <td className="px-4 py-3 text-muted-foreground">{h.manager_name ?? h.manager?.name ?? "—"}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{h.created_at ? new Date(h.created_at).toLocaleDateString("pt-BR") : "—"}</td>
                   <td className="px-4 py-3">
                     {can("hosts:manage") && (
                       <div className="relative">
@@ -122,7 +146,7 @@ function HostsPage() {
                 </tr>
               ))}
               {!isLoading && rows.length === 0 && (
-                <tr><td colSpan={8} className="py-12 text-center text-sm text-muted-foreground">Nenhum host cadastrado. Crie o primeiro para começar.</td></tr>
+                <tr><td colSpan={8} className="py-12 text-center text-sm text-muted-foreground">Nenhum host encontrado.</td></tr>
               )}
               {isLoading && (
                 <tr><td colSpan={8} className="py-12 text-center text-sm text-muted-foreground">Carregando…</td></tr>
@@ -163,12 +187,9 @@ function InviteModal({ agencyId, onClose }: { agencyId: string; onClose: () => v
     // Import lazily to avoid pulling into initial bundle
     const { supabase } = await import("@/integrations/supabase/client");
     const term = q.trim();
-    const { data } = await supabase.from("profiles")
-      .select("id,name,livepulse_id,country,city,platform,agency_id,email,whatsapp")
-      .is("agency_id", null)
-      .or(`livepulse_id.eq.${term},name.ilike.%${term}%,email.ilike.%${term}%,whatsapp.ilike.%${term}%`)
-      .limit(10);
-    setResults((data ?? []) as never);
+    const { data, error } = await supabase.rpc("search_unaffiliated_host_by_livepulse_id", { _livepulse_id: term });
+    if (error) toast.error(error.message);
+    setResults((data ?? []).map((row) => ({ ...row, livepulse_id: row.livepulse_id ?? null })));
     setSearching(false);
   };
 
@@ -187,7 +208,7 @@ function InviteModal({ agencyId, onClose }: { agencyId: string; onClose: () => v
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4 backdrop-blur-sm" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg rounded-2xl border border-border bg-background p-6 shadow-2xl">
         <h2 className="font-display text-xl font-semibold">Convidar Host</h2>
-        <p className="mt-1 text-xs text-muted-foreground">Pesquise por Livepulse ID (ex: LP-H-XXXXXX), nome, e-mail ou WhatsApp.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Pesquise um Host sem agência pelo Livepulse ID exato.</p>
 
         <div className="mt-4 flex gap-2">
           <input value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} placeholder="LP-H-XXXXXX" className="h-10 flex-1 rounded-lg border border-border bg-background/40 px-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
