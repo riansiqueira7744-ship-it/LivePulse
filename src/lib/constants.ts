@@ -62,6 +62,7 @@ export const ROLE_ROUTES: Record<UserRole, string[]> = {
     "/app/seasons", "/app/files", "/app/calendar", "/app/invites",
     "/app/notifications", "/app/profile", "/app/settings",
   ],
+  agency_pending: ["/pending-payment"],
 };
 
 // Permission matrix — used by `can()` in auth-context.
