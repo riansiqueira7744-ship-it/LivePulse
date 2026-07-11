@@ -1,59 +1,93 @@
+# Livepulse V1 · Backend real (Lovable Cloud)
 
-# Livepulse — Upgrade para SaaS Multi-Tenant
+Lovable Cloud ativado. O plano abaixo transforma o MVP mock em uma V1 publicável **em duas rodadas** — sem quebrar telas que ainda usarão mock temporariamente. Design, rotas, i18n e permissões atuais serão preservados.
 
-Escopo enorme. Vou entregar em **fases sequenciais** (uma por turno) para manter qualidade e não quebrar o design atual. Cada fase é navegável e funcional com dados mock.
+## Rodada 1 — Fundação (esta rodada)
 
-## Princípios
-- **Preservar 100%** do design, animações, landing page e páginas atuais.
-- **pt-BR** em toda a UI, com i18n preparado (chaves em `src/i18n/pt-BR.ts` + hook `useT`, pronto para adicionar EN/ES/FR/IT/DE).
-- **Multi-tenant mock**: `AgencyContext` com `agency_id` propagado por todos os services; filtro por tenant já aplicado.
-- **4 papéis**: `super_admin | agency_owner | manager | host` — `auth-context` estendido, `ROLE_ROUTES` reescrito, guards por rota e por ação (`can(action)`).
-- **Camada de dados**: `src/services/*` por recurso (agencies, users, hosts, managers, chat, goals, ranking, gamification, livecoins, store, seasons, files, calendar, finance, subscriptions). Interface pronta pra Supabase.
-- **Tipos DB-ready** em `src/types/` refletindo schema futuro (tenant_id em tudo).
+### 1. Schema (migration única)
+Tabelas em `public`, todas com `agency_id uuid`, `created_at`, `updated_at`, GRANTs para `authenticated` + `service_role` e RLS habilitado:
 
-## Fase 1 — Fundação (este turno)
-1. **i18n**: `src/i18n/{index.ts, pt-BR.ts, en.ts}` + `useT()`; seletor no Configurações.
-2. **Multi-tenant + papéis**:
-   - `src/types/index.ts`: adicionar `Agency`, `Subscription`, `super_admin`, `agency_owner`; `tenant_id` em Host/Manager/Tx/etc.
-   - `auth-context`: 4 mock users (1 por papel) + `currentAgency` + `can(permission)`.
-   - `constants.ts`: `ROLE_ROUTES` com rotas novas; matriz de permissões.
-3. **Mocks completos**: `mock-agencies.ts`, `mock-subscriptions.ts`, `mock-chat.ts`, `mock-gamification.ts`, `mock-livecoins.ts`, `mock-store.ts`, `mock-seasons.ts`, `mock-files.ts`, `mock-calendar.ts` (dados ricos, realistas).
-4. **Services** para cada recurso novo (mesma forma dos existentes).
-5. **Login**: 4 botões de papel (Super Admin, Dono, Gerente, Host).
-6. **Sidebar**: navegação dinâmica por papel; grupo "Super Admin" quando aplicável.
+- `agencies` — nome, slug, logo, país, plano, status, mrr, contadores
+- `subscriptions` — 1:1 com `agencies`, plano, preço, status, próxima cobrança
+- `profiles` — 1:1 com `auth.users`, nome, avatar, whatsapp, país, cidade, locale, `agency_id`
+- `user_roles` — tabela separada (segurança) com enum `app_role` (`super_admin`, `agency_owner`, `manager`, `host`)
+- `managers` — perfil operacional do gerente na agência
+- `hosts` — vínculo com manager, plataforma, categoria, métricas base
+- `goals` — meta por host/agência, período, alvo, progresso
+- `financial_transactions` — receita/comissão/pagamento por host, com tipo/status/data
+- `commissions` — regra de comissão por host/manager (percentual, base)
+- `rankings` — snapshot semanal/mensal de posição por host
+- `notifications` — destinatário (user_id), tipo, título, corpo, lida
 
-## Fase 2 — Área Super Admin
-- `/admin/agencies` (lista, criar, editar, bloquear)
-- `/admin/subscriptions` (planos, faturamento MRR/ARR)
-- `/admin/overview` (dashboard global)
-- `/admin/support` (chat privado com donos)
-- `/admin/broadcasts` (comunicados globais)
+Extras técnicos:
+- Enum `app_role`
+- Função `public.has_role(_user_id, _role)` `SECURITY DEFINER`
+- Função `public.current_agency_id()` `SECURITY DEFINER` (lê da `profiles`)
+- Trigger `on_auth_user_created` → cria `profiles` automaticamente
+- Trigger `set_updated_at` em todas as tabelas
+- Bucket Storage `avatars` (público) e `agency-logos` (público)
 
-## Fase 3 — Comunicação
-- `/app/chat` — chat interno da agência (canais + DMs, mensagens fixadas, upload mock, busca, emojis).
-- Chat privado Super Admin ↔ Dono integrado.
+### 2. RLS (política por tabela)
+Modelo unificado:
+- `super_admin` → acesso total via `has_role(auth.uid(),'super_admin')`
+- `agency_owner` → `agency_id = current_agency_id()` em SELECT/INSERT/UPDATE/DELETE
+- `manager` → SELECT em hosts/goals do próprio time (`manager_id = auth.uid()`), UPDATE limitado; **nega** SELECT em `financial_transactions`, `subscriptions`, `commissions` da agência
+- `host` → SELECT/UPDATE apenas nas próprias linhas (`user_id = auth.uid()`); **nega** financeiro/assinatura
+- `profiles`: leitura pela própria linha ou colegas de agência; update só na própria
+- `user_roles`: leitura pelo próprio usuário; write só `service_role` + super_admin
+- `notifications`: destinatário lê/atualiza a própria
 
-## Fase 4 — Engajamento
-- `/app/gamification` — níveis, badges, conquistas.
-- `/app/livecoins` — saldo, histórico, comprar.
-- `/app/store` — marketplace (Host / Agência).
-- `/app/seasons` — temporadas + premiações.
-- Perfil premium com moldura/badges/nível.
+### 3. Autenticação real
+- `src/routes/login.tsx` refeita: email/senha + Google (via `lovable.auth.signInWithOAuth`) + link "esqueci a senha"
+- Nova `src/routes/signup.tsx` (cria conta + agência inicial para `agency_owner`)
+- Nova `src/routes/forgot-password.tsx` e `src/routes/reset-password.tsx`
+- `src/lib/auth-context.tsx` reescrita: usa `supabase.auth`, carrega `profiles` + `user_roles` + `agency`, expõe a mesma API (`user`, `currentAgency`, `can`, `canAccess`) — consumidores não mudam
+- Sessão persistente + `onAuthStateChange` no `__root.tsx` invalidando queries
+- Layouts `/app` e `/admin` passam a redirecionar para `/login` quando `!user`
 
-## Fase 5 — Operações
-- `/app/files` — centro de arquivos por agência.
-- `/app/calendar` — eventos, metas, reuniões, pagamentos.
-- Cadastro de usuário completo (foto, WhatsApp com botão "Abrir WhatsApp", país, cidade, plataforma, ID, gerente).
-- Metas e Ranking: reforçar CRUD + filtros pedidos.
+### 4. Camada de dados real
+- Introduz `@tanstack/react-query` (já instalado) com `QueryClientProvider` no root
+- `src/services/index.ts` refatorado — cada `service` vira função que chama `supabase.from(...)` com filtros por `agency_id` (RLS reforça no servidor)
+- Hooks `useAgencies`, `useHosts`, `useManagers`, `useGoals`, `useFinance`, `useRanking`, `useNotifications`, `useSubscriptions`
 
-## Fase 6 — SaaS/Config
-- Configurações: perfil, agência, idioma, tema, segurança, notificações.
-- Assinaturas na visão do Dono (plano, vencimento, status).
+### 5. Telas conectadas nesta rodada (CRUD real)
+- **/login, /signup, /forgot-password, /reset-password** — auth real
+- **/app/dashboard** — lê hosts, goals, financeiro reais (escopados)
+- **/app/hosts** — CRUD completo (criar, editar, excluir, buscar, filtrar)
+- **/app/managers** — CRUD completo
+- **/app/goals** — CRUD completo
+- **/app/finance** — leitura + criar transação + filtros (bloqueada para manager/host via RLS + guard)
+- **/app/ranking** — leitura real (snapshot mais recente)
+- **/app/notifications** — leitura + marcar como lida
+- **/admin/agencies** — CRUD completo (super_admin)
+- **/admin/subscriptions** — leitura + editar plano/status
+- **/admin/overview** — KPIs reais
 
-## Detalhes técnicos
-- Sem backend, sem auth real, sem DB — tudo mock.
-- `AgencyProvider` envolve `AuthProvider`; hooks `useAgency()`, `useT()`, `useCan()`.
-- Guards: `beforeLoad` nas rotas `/admin/*` (só super_admin) e filtragem já existente em `/app/*`.
-- Zero mudanças na landing page e no visual atual — apenas extensões.
+## Rodada 2 (próxima) — completar migração
+Fica **explicitamente marcado como mock** ao final desta rodada:
+- `/admin/support` (chat de suporte)
+- `/admin/broadcasts` (comunicados)
+- `/app/community`, `/app/ai`, `/app/reports` (relatórios PDF), `/app/commissions`, `/app/profile` (edição de avatar via Storage)
+- Seed de dados demo por agência
 
-Confirma que posso começar pela **Fase 1** agora? Se preferir outra ordem (ex: começar por Chat ou Super Admin), me diz.
+## Diagrama de escopo por papel
+
+```text
+super_admin  ──►  tudo (via has_role)
+agency_owner ──►  agency_id = current_agency_id()
+manager      ──►  hosts/goals do time; NEGA financeiro/assinaturas
+host         ──►  próprias linhas; NEGA financeiro/assinaturas
+```
+
+## Checagens antes de fechar a rodada
+- `tsgo` limpo
+- Login/logout/reset funcionando end-to-end
+- Criar agência + host + goal + transação salvando de fato (`supabase--read_query` confirma)
+- Segundo usuário de outra agência **não** enxerga dados da primeira
+- Manager e host recebem `permission denied` ao consultar `financial_transactions`
+
+## Observações
+- Primeiro usuário criado precisará receber `super_admin` manualmente via `insert` na `user_roles` (te aviso no resumo com o SQL exato)
+- Todos os mocks em `src/lib/mock-*` continuam no repo até serem substituídos na Rodada 2, mas nenhum será importado pelas telas migradas
+
+Confirme para eu executar a Rodada 1 completa.
