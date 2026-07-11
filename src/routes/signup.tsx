@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { Zap, User, Building2, ArrowRight, Check } from "lucide-react";
 
 export const Route = createFileRoute("/signup")({
@@ -7,6 +7,12 @@ export const Route = createFileRoute("/signup")({
 });
 
 function SignupChoice() {
+  const isChoiceRoute = useRouterState({
+    select: (state) => state.location.pathname === "/signup",
+  });
+
+  if (!isChoiceRoute) return <Outlet />;
+
   return (
     <div className="mesh-bg min-h-screen">
       <div className="mx-auto max-w-5xl px-6 py-16">
@@ -52,7 +58,7 @@ function SignupChoice() {
   );
 }
 
-function Card({ to, icon, title, desc, perks, cta, badge, highlight }: { to: string; icon: React.ReactNode; title: string; desc: string; perks: string[]; cta: string; badge: string; highlight?: boolean }) {
+function Card({ to, icon, title, desc, perks, cta, badge, highlight }: { to: "/signup/host" | "/signup/agency"; icon: React.ReactNode; title: string; desc: string; perks: string[]; cta: string; badge: string; highlight?: boolean }) {
   return (
     <Link
       to={to}
