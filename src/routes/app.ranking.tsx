@@ -54,7 +54,7 @@ function RankingPage() {
                     </div>
                     <div className="font-display text-3xl font-bold text-muted-foreground/50">#{i + 1}</div>
                   </div>
-                  <img src={h.avatar_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${h.id}`} className="mt-4 h-16 w-16 rounded-full ring-2 ring-border" alt="" />
+                  <Avatar src={h.avatar_url} name={h.nickname} size={64} className="mt-4 ring-2 ring-border" />
                   <div className="mt-3 font-display text-xl font-semibold">{h.nickname}</div>
                   <div className="text-xs text-muted-foreground">{h.category ?? "—"}</div>
                   <div className="mt-4 flex items-end justify-between">
