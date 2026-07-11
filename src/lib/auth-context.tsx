@@ -7,14 +7,13 @@ import { ROLE_ROUTES, ROLE_PERMISSIONS, type Permission } from "@/lib/constants"
 // Real auth backed by Lovable Cloud. Loads profile + role + agency on session.
 // Public API kept compatible with previous mock implementation so consumers
 // don't change.
-
-  role: UserRole;
-  livepulse_id: string | null;
+export interface AuthUser {
   id: string;
   email: string;
   name: string;
   avatar_url: string | null;
   role: UserRole;
+  livepulse_id: string | null;
   agency_id: string | null;
   whatsapp: string | null;
   country: string | null;
