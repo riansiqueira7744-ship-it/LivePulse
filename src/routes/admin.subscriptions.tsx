@@ -94,6 +94,17 @@ function SubscriptionsPage() {
                     </td>
                     <td className="py-3 pr-3">
                       <div className="flex items-center justify-end gap-1">
+                        {s.status === "awaiting_payment" && (
+                          <button
+                            onClick={async () => {
+                              const { supabase } = await import("@/integrations/supabase/client");
+                              const { error } = await supabase.rpc("confirm_subscription_payment", { _subscription_id: s.id, _notes: null });
+                              if (error) toast.error(error.message); else { toast.success("Pagamento confirmado"); location.reload(); }
+                            }}
+                            className="inline-flex items-center gap-1 rounded-md border border-success/50 bg-success/10 px-2 py-1 text-[11px] font-semibold text-success hover:bg-success/20">
+                            <Play className="h-3 w-3" /> Confirmar pagamento
+                          </button>
+                        )}
                         <button onClick={() => setEditing(s)} className="inline-flex items-center gap-1 rounded-md border border-border bg-card/60 px-2 py-1 text-[11px] font-semibold hover:border-primary/50">
                           <Edit className="h-3 w-3" /> Editar
                         </button>
