@@ -24,7 +24,7 @@ function Landing() {
       <Screenshot />
       <Benefits />
       <Pricing />
-      <Testimonials />
+      
       <FAQ />
       <CTA />
       <Footer />
