@@ -159,3 +159,4 @@ export function useMarkAllNotificationsRead() {
 }
 
 export type { DbAgency, DbSubscription, DbHost, DbManager, DbGoal, DbTransaction, DbRanking };
+export type { DbNotification } from "@/services";
