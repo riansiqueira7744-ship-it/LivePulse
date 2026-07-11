@@ -12,14 +12,16 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && isAuthenticated) navigate({ to: "/app/dashboard" });
-  }, [loading, isAuthenticated, navigate]);
+    if (loading || !isAuthenticated || !user) return;
+    if (user.role === "agency_pending") navigate({ to: "/pending-payment" });
+    else navigate({ to: "/app/dashboard" });
+  }, [loading, isAuthenticated, user, navigate]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +30,6 @@ function LoginPage() {
     setSubmitting(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Bem-vindo!");
-    navigate({ to: "/app/dashboard" });
   };
 
   const handleGoogle = async () => {
