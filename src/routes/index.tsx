@@ -357,7 +357,7 @@ function CTA() {
         <h2 className="font-display text-4xl font-semibold md:text-5xl">Pronto para profissionalizar sua agência?</h2>
         <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Setup em 5 minutos. Migração assistida gratuita. Sem cartão de crédito.</p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link to="/app/dashboard" className="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">Explorar plataforma</Link>
+          <Link to="/signup" className="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90">Criar conta</Link>
           <Link to="/login" className="rounded-xl border border-border bg-card/60 px-6 py-3 text-sm font-semibold">Entrar</Link>
         </div>
       </div>
