@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PendingPaymentRouteImport } from './routes/pending-payment'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AppRouteImport } from './routes/app'
@@ -48,6 +49,11 @@ const SignupRoute = SignupRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PendingPaymentRoute = PendingPaymentRouteImport.update({
+  id: '/pending-payment',
+  path: '/pending-payment',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/pending-payment': typeof PendingPaymentRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/pending-payment': typeof PendingPaymentRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
@@ -260,6 +268,7 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/pending-payment': typeof PendingPaymentRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
@@ -294,6 +303,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/forgot-password'
     | '/login'
+    | '/pending-payment'
     | '/reset-password'
     | '/signup'
     | '/admin/agencies'
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/'
     | '/forgot-password'
     | '/login'
+    | '/pending-payment'
     | '/reset-password'
     | '/signup'
     | '/admin/agencies'
@@ -356,6 +367,7 @@ export interface FileRouteTypes {
     | '/app'
     | '/forgot-password'
     | '/login'
+    | '/pending-payment'
     | '/reset-password'
     | '/signup'
     | '/admin/agencies'
@@ -389,6 +401,7 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  PendingPaymentRoute: typeof PendingPaymentRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRouteWithChildren
 }
@@ -407,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pending-payment': {
+      id: '/pending-payment'
+      path: '/pending-payment'
+      fullPath: '/pending-payment'
+      preLoaderRoute: typeof PendingPaymentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -685,6 +705,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  PendingPaymentRoute: PendingPaymentRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRouteWithChildren,
 }
