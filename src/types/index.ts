@@ -5,7 +5,7 @@
 export type UUID = string;
 export type ISODate = string;
 
-export type UserRole = "super_admin" | "agency_owner" | "manager" | "host";
+export type UserRole = "super_admin" | "agency_owner" | "manager" | "host" | "agency_pending";
 
 export type Locale = "pt-BR" | "en" | "es" | "fr" | "it" | "de";
 
