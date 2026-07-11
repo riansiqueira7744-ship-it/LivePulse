@@ -8,6 +8,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   agency_owner: "Dono da Agência",
   manager: "Gerente",
   host: "Host",
+  agency_pending: "Agência (aguardando pagamento)",
 };
 
 export const HOST_STATUS_LABELS: Record<HostStatus, string> = {
