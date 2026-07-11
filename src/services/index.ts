@@ -1,97 +1,245 @@
-// Service layer — mocks today, Supabase-ready shape for tomorrow.
-// All UI reads/writes must go through these functions so switching to
-// a real backend is a single-file refactor per resource.
+// Service layer — Supabase-backed CRUD for the operational core.
+// Every read/write flows through here so future refactors stay isolated.
 
-import { hosts, managers, payments, revenueSeries, categorySplit, alerts, activities, feed, aiInsights } from "@/lib/mock-data";
-import { mockNotifications } from "@/lib/mock-notifications";
-import { mockAgencies, mockSubscriptions } from "@/lib/mock-agencies";
-import { mockChannels, mockMessages } from "@/lib/mock-chat";
-import { mockBadges, mockAchievements, mockLevels } from "@/lib/mock-gamification";
-import { mockBalances, mockLiveCoinsTx, mockLiveCoinsPackages } from "@/lib/mock-livecoins";
-import { mockStoreItems } from "@/lib/mock-store";
-import { mockSeasons } from "@/lib/mock-seasons";
-import { mockFiles } from "@/lib/mock-files";
-import { mockEvents } from "@/lib/mock-calendar";
-import { mockBroadcasts } from "@/lib/mock-broadcasts";
-import type { Notification } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
-const delay = <T,>(v: T, ms = 120) => new Promise<T>((r) => setTimeout(() => r(v), ms));
-
-export const hostsService = {
-  list: (_agencyId?: string) => delay(hosts),
-  get: (id: string) => delay(hosts.find((h) => h.id === id) ?? null),
+// ---------- Types (DB row shape) ----------
+export type DbAgency = {
+  id: string; name: string; slug: string; logo_url: string | null;
+  country: string | null; city: string | null;
+  plan: "starter" | "growth" | "scale" | "enterprise";
+  status: "active" | "trial" | "suspended" | "cancelled";
+  mrr: number; hosts_count: number; managers_count: number;
+  owner_id: string | null; created_at: string;
 };
 
-export const managersService = {
-  list: (_agencyId?: string) => delay(managers),
+export type DbSubscription = {
+  id: string; agency_id: string;
+  plan: DbAgency["plan"];
+  status: "active" | "trial" | "suspended" | "cancelled" | "past_due";
+  price_monthly: number; currency: string; seats: number;
+  trial_ends_at: string | null; current_period_end: string | null;
 };
 
-export const financeService = {
-  payments: () => delay(payments),
-  revenueSeries: () => delay(revenueSeries),
-  categorySplit: () => delay(categorySplit),
+export type DbManager = {
+  id: string; agency_id: string; user_id: string | null;
+  name: string; email: string | null; whatsapp: string | null;
+  avatar_url: string | null; team_size: number; status: string;
+  created_at: string;
 };
 
-export const dashboardService = {
-  alerts: () => delay(alerts),
-  activities: () => delay(activities),
-  aiInsights: () => delay(aiInsights),
+export type DbHost = {
+  id: string; agency_id: string; user_id: string | null; manager_id: string | null;
+  nickname: string; email: string | null; whatsapp: string | null;
+  avatar_url: string | null;
+  platform: "tiktok" | "kwai" | "bigo" | "other";
+  category: string | null; country: string | null; city: string | null;
+  status: "active" | "inactive" | "pending";
+  live_hours: number; gifts_total: number; earnings_total: number;
+  score: number; joined_at: string | null; created_at: string;
+  manager?: { name: string } | null;
 };
 
-export const communityService = {
-  feed: () => delay(feed),
+export type DbGoal = {
+  id: string; agency_id: string; host_id: string | null;
+  title: string; description: string | null;
+  period: "weekly" | "monthly" | "quarterly";
+  target: number; progress: number;
+  status: "active" | "completed" | "failed" | "cancelled";
+  starts_at: string; ends_at: string | null;
+  host?: { nickname: string } | null;
 };
 
-export const notificationsService = {
-  list: (): Promise<Notification[]> => delay(mockNotifications),
-  unreadCount: () => mockNotifications.filter((n) => !n.read).length,
+export type DbTransaction = {
+  id: string; agency_id: string; host_id: string | null; manager_id: string | null;
+  type: "revenue" | "payout" | "commission" | "refund" | "adjustment";
+  status: "pending" | "confirmed" | "paid" | "failed";
+  amount: number; currency: string; description: string | null;
+  reference: string | null; occurred_at: string; created_at: string;
 };
 
+export type DbRanking = {
+  id: string; agency_id: string; host_id: string;
+  period: "weekly" | "monthly" | "quarterly"; period_start: string;
+  position: number; score: number; category: string | null;
+  host?: { nickname: string; avatar_url: string | null; category: string | null } | null;
+};
+
+export type DbNotification = {
+  id: string; user_id: string; agency_id: string | null;
+  type: "info" | "success" | "warning" | "danger";
+  title: string; body: string | null; read: boolean; link: string | null;
+  created_at: string;
+};
+
+// ---------- AGENCIES ----------
 export const agenciesService = {
-  list: () => delay(mockAgencies),
-  get: (id: string) => delay(mockAgencies.find((a) => a.id === id) ?? null),
+  list: async () => {
+    const { data, error } = await supabase.from("agencies").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as DbAgency[];
+  },
+  get: async (id: string) => {
+    const { data, error } = await supabase.from("agencies").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data as DbAgency | null;
+  },
+  create: async (payload: Partial<DbAgency>) => {
+    const { data, error } = await supabase.from("agencies").insert(payload as any).select().single();
+    if (error) throw error;
+    return data as DbAgency;
+  },
+  update: async (id: string, patch: Partial<DbAgency>) => {
+    const { data, error } = await supabase.from("agencies").update(patch as any).eq("id", id).select().single();
+    if (error) throw error;
+    return data as DbAgency;
+  },
+  remove: async (id: string) => {
+    const { error } = await supabase.from("agencies").delete().eq("id", id);
+    if (error) throw error;
+  },
 };
 
+// ---------- SUBSCRIPTIONS ----------
 export const subscriptionsService = {
-  list: () => delay(mockSubscriptions),
-  getForAgency: (id: string) => delay(mockSubscriptions.find((s) => s.agency_id === id) ?? null),
+  list: async () => {
+    const { data, error } = await supabase.from("subscriptions").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as DbSubscription[];
+  },
+  upsert: async (payload: Partial<DbSubscription> & { agency_id: string }) => {
+    const { data, error } = await supabase.from("subscriptions").upsert(payload as any, { onConflict: "agency_id" }).select().single();
+    if (error) throw error;
+    return data as DbSubscription;
+  },
+  update: async (id: string, patch: Partial<DbSubscription>) => {
+    const { data, error } = await supabase.from("subscriptions").update(patch as any).eq("id", id).select().single();
+    if (error) throw error;
+    return data as DbSubscription;
+  },
 };
 
-export const chatService = {
-  channels: (_agencyId?: string) => delay(mockChannels),
-  messages: (channelId: string) => delay(mockMessages[channelId] ?? []),
+// ---------- HOSTS ----------
+export const hostsService = {
+  list: async () => {
+    const { data, error } = await supabase.from("hosts")
+      .select("*, manager:managers(name)")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as DbHost[];
+  },
+  create: async (payload: Partial<DbHost> & { agency_id: string; nickname: string }) => {
+    const { data, error } = await supabase.from("hosts").insert(payload as any).select().single();
+    if (error) throw error;
+    return data as DbHost;
+  },
+  update: async (id: string, patch: Partial<DbHost>) => {
+    const { data, error } = await supabase.from("hosts").update(patch as any).eq("id", id).select().single();
+    if (error) throw error;
+    return data as DbHost;
+  },
+  remove: async (id: string) => {
+    const { error } = await supabase.from("hosts").delete().eq("id", id);
+    if (error) throw error;
+  },
 };
 
-export const gamificationService = {
-  badges: () => delay(mockBadges),
-  achievementsOf: (userId: string) => delay(mockAchievements.filter((a) => a.user_id === userId)),
-  levels: () => delay(mockLevels),
+// ---------- MANAGERS ----------
+export const managersService = {
+  list: async () => {
+    const { data, error } = await supabase.from("managers").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as DbManager[];
+  },
+  create: async (payload: Partial<DbManager> & { agency_id: string; name: string }) => {
+    const { data, error } = await supabase.from("managers").insert(payload as any).select().single();
+    if (error) throw error;
+    return data as DbManager;
+  },
+  update: async (id: string, patch: Partial<DbManager>) => {
+    const { data, error } = await supabase.from("managers").update(patch as any).eq("id", id).select().single();
+    if (error) throw error;
+    return data as DbManager;
+  },
+  remove: async (id: string) => {
+    const { error } = await supabase.from("managers").delete().eq("id", id);
+    if (error) throw error;
+  },
 };
 
-export const liveCoinsService = {
-  balanceOf: (userId: string) => delay(mockBalances[userId] ?? { user_id: userId, balance: 0, lifetime: 0 }),
-  transactionsOf: (userId: string) => delay(mockLiveCoinsTx.filter((t) => t.user_id === userId)),
-  packages: () => delay(mockLiveCoinsPackages),
+// ---------- GOALS ----------
+export const goalsService = {
+  list: async () => {
+    const { data, error } = await supabase.from("goals")
+      .select("*, host:hosts(nickname)")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as DbGoal[];
+  },
+  create: async (payload: Partial<DbGoal> & { agency_id: string; title: string; target: number }) => {
+    const { data, error } = await supabase.from("goals").insert(payload as any).select().single();
+    if (error) throw error;
+    return data as DbGoal;
+  },
+  update: async (id: string, patch: Partial<DbGoal>) => {
+    const { data, error } = await supabase.from("goals").update(patch as any).eq("id", id).select().single();
+    if (error) throw error;
+    return data as DbGoal;
+  },
+  remove: async (id: string) => {
+    const { error } = await supabase.from("goals").delete().eq("id", id);
+    if (error) throw error;
+  },
 };
 
-export const storeService = {
-  list: () => delay(mockStoreItems),
-  byScope: (scope: "host" | "agency") => delay(mockStoreItems.filter((i) => i.scope === scope)),
+// ---------- FINANCE ----------
+export const financeService = {
+  list: async () => {
+    const { data, error } = await supabase.from("financial_transactions")
+      .select("*").order("occurred_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as DbTransaction[];
+  },
+  create: async (payload: Partial<DbTransaction> & { agency_id: string; type: DbTransaction["type"]; amount: number }) => {
+    const { data, error } = await supabase.from("financial_transactions").insert(payload as any).select().single();
+    if (error) throw error;
+    return data as DbTransaction;
+  },
+  remove: async (id: string) => {
+    const { error } = await supabase.from("financial_transactions").delete().eq("id", id);
+    if (error) throw error;
+  },
 };
 
-export const seasonsService = {
-  list: () => delay(mockSeasons),
-  active: () => delay(mockSeasons.find((s) => s.status === "active") ?? null),
+// ---------- RANKINGS ----------
+export const rankingsService = {
+  latest: async (period: DbRanking["period"] = "monthly") => {
+    const { data, error } = await supabase.from("rankings")
+      .select("*, host:hosts(nickname, avatar_url, category)")
+      .eq("period", period)
+      .order("period_start", { ascending: false })
+      .order("position", { ascending: true })
+      .limit(100);
+    if (error) throw error;
+    return (data ?? []) as DbRanking[];
+  },
 };
 
-export const filesService = {
-  list: (_agencyId?: string) => delay(mockFiles),
-};
-
-export const calendarService = {
-  events: (_agencyId?: string) => delay(mockEvents),
-};
-
-export const broadcastsService = {
-  list: () => delay(mockBroadcasts),
+// ---------- NOTIFICATIONS ----------
+export const notificationsService = {
+  list: async () => {
+    const { data, error } = await supabase.from("notifications").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []) as DbNotification[];
+  },
+  markRead: async (id: string) => {
+    const { error } = await supabase.from("notifications").update({ read: true }).eq("id", id);
+    if (error) throw error;
+  },
+  markAllRead: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { error } = await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+    if (error) throw error;
+  },
 };

@@ -1,128 +1,141 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Agency, User, UserRole } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
+import type { UserRole } from "@/types";
 import { ROLE_ROUTES, ROLE_PERMISSIONS, type Permission } from "@/lib/constants";
-import { mockAgencies } from "@/lib/mock-agencies";
 
-// Mock authentication — persisted to localStorage. Ready to be swapped
-// for a real Supabase session provider without touching consumers.
+// Real auth backed by Lovable Cloud. Loads profile + role + agency on session.
+// Public API kept compatible with previous mock implementation so consumers
+// don't change.
 
-const STORAGE_KEY = "livepulse.auth";
-const DEFAULT_AGENCY_ID = mockAgencies[0].id;
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url: string | null;
+  role: UserRole;
+  agency_id: string | null;
+  whatsapp: string | null;
+  country: string | null;
+  city: string | null;
+  locale: string;
+}
 
-const MOCK_USERS: Record<UserRole, User> = {
-  super_admin: {
-    id: "usr_super_1",
-    email: "founder@livepulse.io",
-    name: "Bruno Falcão",
-    avatar_url: "https://api.dicebear.com/9.x/glass/svg?seed=super",
-    role: "super_admin",
-    agency_id: null,
-    whatsapp: "+55 11 99999-0001",
-    country: "BR",
-    city: "São Paulo",
-    locale: "pt-BR",
-    created_at: "2024-11-01T09:00:00Z",
-    last_sign_in_at: new Date().toISOString(),
-  },
-  agency_owner: {
-    id: "usr_owner_1",
-    email: "carlos@livepulse.io",
-    name: "Carlos Almeida",
-    avatar_url: "https://api.dicebear.com/9.x/glass/svg?seed=owner",
-    role: "agency_owner",
-    agency_id: DEFAULT_AGENCY_ID,
-    whatsapp: "+55 11 98888-1010",
-    country: "BR",
-    city: "São Paulo",
-    locale: "pt-BR",
-    created_at: "2025-01-10T09:00:00Z",
-    last_sign_in_at: new Date().toISOString(),
-  },
-  manager: {
-    id: "usr_mgr_1",
-    email: "rafael@livepulse.io",
-    name: "Rafael Costa",
-    avatar_url: "https://api.dicebear.com/9.x/glass/svg?seed=Rafael%20Costa",
-    role: "manager",
-    agency_id: DEFAULT_AGENCY_ID,
-    whatsapp: "+55 11 97777-2020",
-    country: "BR",
-    city: "Rio de Janeiro",
-    locale: "pt-BR",
-    created_at: "2025-02-14T09:00:00Z",
-    last_sign_in_at: new Date().toISOString(),
-  },
-  host: {
-    id: "usr_host_1",
-    email: "ana@livepulse.io",
-    name: "Ana Vitória",
-    avatar_url: "https://api.dicebear.com/9.x/glass/svg?seed=Ana%20Vit%C3%B3ria",
-    role: "host",
-    agency_id: DEFAULT_AGENCY_ID,
-    whatsapp: "+55 11 96666-3030",
-    country: "BR",
-    city: "Belo Horizonte",
-    locale: "pt-BR",
-    created_at: "2025-03-01T09:00:00Z",
-    last_sign_in_at: new Date().toISOString(),
-  },
-};
+export interface CurrentAgency {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  plan: "starter" | "growth" | "scale" | "enterprise";
+  status: "active" | "trial" | "suspended" | "cancelled";
+}
 
 interface AuthContextValue {
-  user: User | null;
-  currentAgency: Agency | null;
+  user: AuthUser | null;
+  currentAgency: CurrentAgency | null;
+  session: Session | null;
+  loading: boolean;
   isAuthenticated: boolean;
-  signIn: (role?: UserRole) => void;
-  signOut: () => void;
-  switchRole: (role: UserRole) => void;
-  switchAgency: (agencyId: string) => void;
+  signOut: () => Promise<void>;
+  refresh: () => Promise<void>;
   canAccess: (path: string) => boolean;
   can: (permission: Permission) => boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+async function loadContext(userId: string, email: string): Promise<{ user: AuthUser; agency: CurrentAgency | null } | null> {
+  const [{ data: profile }, { data: roles }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+  ]);
+
+  // Priority: super_admin > agency_owner > manager > host
+  const priority: UserRole[] = ["super_admin", "agency_owner", "manager", "host"];
+  const rowRoles = (roles ?? []).map((r) => r.role as UserRole);
+  const role: UserRole = priority.find((p) => rowRoles.includes(p)) ?? "host";
+
+  const user: AuthUser = {
+    id: userId,
+    email,
+    name: profile?.name ?? email.split("@")[0],
+    avatar_url: profile?.avatar_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${userId}`,
+    role,
+    agency_id: profile?.agency_id ?? null,
+    whatsapp: profile?.whatsapp ?? null,
+    country: profile?.country ?? null,
+    city: profile?.city ?? null,
+    locale: profile?.locale ?? "pt-BR",
+  };
+
+  let agency: CurrentAgency | null = null;
+  if (user.agency_id) {
+    const { data } = await supabase
+      .from("agencies")
+      .select("id,name,slug,logo_url,plan,status")
+      .eq("id", user.agency_id)
+      .maybeSingle();
+    if (data) agency = data as CurrentAgency;
+  }
+
+  return { user, agency };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [agencyOverrideId, setAgencyOverrideId] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [agency, setAgency] = useState<CurrentAgency | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const hydrate = async (nextSession: Session | null) => {
+    setSession(nextSession);
+    if (!nextSession?.user) {
+      setUser(null);
+      setAgency(null);
+      setLoading(false);
+      return;
+    }
+    const ctx = await loadContext(nextSession.user.id, nextSession.user.email ?? "");
+    setUser(ctx?.user ?? null);
+    setAgency(ctx?.agency ?? null);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    try {
-      const raw = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
-      if (raw) setUser(JSON.parse(raw));
-      else setUser(MOCK_USERS.agency_owner);
-    } catch {
-      setUser(MOCK_USERS.agency_owner);
-    }
+    // Subscribe FIRST, then read the current session, to avoid missing events.
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      // Defer async work to next tick to avoid deadlocks in the listener
+      setTimeout(() => {
+        if (event === "SIGNED_OUT") {
+          setSession(null); setUser(null); setAgency(null); setLoading(false);
+          return;
+        }
+        void hydrate(s);
+      }, 0);
+    });
+    void supabase.auth.getSession().then(({ data }) => hydrate(data.session));
+    return () => sub.subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (user) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    else window.localStorage.removeItem(STORAGE_KEY);
-  }, [user]);
-
-  const value = useMemo<AuthContextValue>(() => {
-    const agencyId = agencyOverrideId ?? user?.agency_id ?? (user?.role === "super_admin" ? DEFAULT_AGENCY_ID : null);
-    const currentAgency = agencyId ? mockAgencies.find((a) => a.id === agencyId) ?? null : null;
-
-    return {
-      user,
-      currentAgency,
-      isAuthenticated: !!user,
-      signIn: (role = "agency_owner") => { setUser(MOCK_USERS[role]); setAgencyOverrideId(null); },
-      signOut: () => { setUser(null); setAgencyOverrideId(null); },
-      switchRole: (role) => { setUser(MOCK_USERS[role]); setAgencyOverrideId(null); },
-      switchAgency: (id) => setAgencyOverrideId(id),
-      canAccess: (path) => {
-        if (!user) return false;
-        const allowed = ROLE_ROUTES[user.role];
-        if (allowed.includes("*")) return true;
-        return allowed.some((p) => path === p || path.startsWith(p + "/"));
-      },
-      can: (permission) => !!user && ROLE_PERMISSIONS[user.role].includes(permission),
-    };
-  }, [user, agencyOverrideId]);
+  const value = useMemo<AuthContextValue>(() => ({
+    user,
+    currentAgency: agency,
+    session,
+    loading,
+    isAuthenticated: !!user,
+    signOut: async () => { await supabase.auth.signOut(); },
+    refresh: async () => {
+      const { data } = await supabase.auth.getSession();
+      await hydrate(data.session);
+    },
+    canAccess: (path) => {
+      if (!user) return false;
+      const allowed = ROLE_ROUTES[user.role];
+      if (allowed.includes("*")) return true;
+      return allowed.some((p) => path === p || path.startsWith(p + "/"));
+    },
+    can: (permission) => !!user && ROLE_PERMISSIONS[user.role].includes(permission),
+  }), [user, agency, session, loading]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
