@@ -89,6 +89,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   host: [
     "chat:agency", "livecoins:buy", "store:buy",
   ],
+  agency_pending: [],
 };
 
 export const CURRENCY_FMT = new Intl.NumberFormat("pt-BR", {
