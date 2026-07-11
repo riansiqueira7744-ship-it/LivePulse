@@ -253,39 +253,68 @@ function Benefits() {
   );
 }
 
+type LandingPlan = {
+  slug: string; name: string; description: string | null;
+  price_monthly: number; total_price: number; billing_period: string;
+  savings_label: string | null; featured: boolean;
+  license_limit: number | null; licenses_used: number;
+};
+
 function Pricing() {
-  const plans = [
-    { name: "Starter", price: "R$ 297", desc: "Agências até 15 hosts", features: ["Dashboard completo","Financeiro básico","5 usuários","Suporte por chat"] },
-    { name: "Growth", price: "R$ 697", desc: "Agências em expansão", features: ["Tudo do Starter","IA Copiloto ilimitada","Comunidade interna","Metas por host","API pública"], featured: true },
-    { name: "Scale", price: "Custom", desc: "Operações enterprise", features: ["Tudo do Growth","White label","Multi-agência","Onboarding dedicado","SLA 99.99%"] },
-  ];
+  const [plans, setPlans] = useState<LandingPlan[]>([]);
+  useEffect(() => {
+    supabase.from("plans").select("slug,name,description,price_monthly,total_price,billing_period,savings_label,featured,license_limit,licenses_used,sort_order").eq("active", true).order("sort_order")
+      .then(({ data }) => { if (data) setPlans(data as unknown as LandingPlan[]); });
+  }, []);
+
+  const periodLabel = (bp: string) => ({ monthly: "/mês", quarterly: "/trimestre", semiannual: "/semestre", annual: "/ano", lifetime: "vitalício" }[bp] ?? "");
+
   return (
     <section id="pricing" className="px-4 py-24 md:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="text-center">
           <div className="text-xs uppercase tracking-widest text-primary">Planos</div>
-          <h2 className="mt-3 font-display text-4xl font-semibold">Preço que cresce com você</h2>
-          <p className="mt-3 text-muted-foreground">14 dias grátis em qualquer plano. Sem cartão de crédito.</p>
+          <h2 className="mt-3 font-display text-4xl font-semibold">Escolha como pagar sua Agência</h2>
+          <p className="mt-3 text-muted-foreground">Ativação manual após confirmação de pagamento. Suporte por WhatsApp.</p>
         </div>
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {plans.map((p)=>(
-            <div key={p.name} className={`relative rounded-2xl border p-7 ${p.featured ? "border-primary/50 bg-gradient-to-b from-primary/10 to-transparent shadow-glow" : "border-border bg-card/60"}`}>
-              {p.featured && <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-primary-foreground">Mais popular</div>}
-              <div className="text-sm font-semibold">{p.name}</div>
-              <div className="mt-4 flex items-end gap-1">
-                <span className="font-display text-4xl font-semibold">{p.price}</span>
-                {p.price !== "Custom" && <span className="text-sm text-muted-foreground">/mês</span>}
+        <div className="mt-12 grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {plans.map((p) => {
+            const isFounder = p.slug === "founder";
+            const remaining = p.license_limit ? Math.max(0, p.license_limit - p.licenses_used) : null;
+            const sold = isFounder && remaining === 0;
+            return (
+              <div key={p.slug} className={`relative rounded-2xl border p-6 ${p.featured ? "border-primary/50 bg-gradient-to-b from-primary/10 to-transparent shadow-glow" : "border-border bg-card/60"}`}>
+                {p.featured && <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-primary-foreground">Mais Popular</div>}
+                {isFounder && <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-warning px-3 py-1 text-[11px] font-semibold text-warning-foreground">Oferta Founder</div>}
+                <div className="text-sm font-semibold">{p.name}</div>
+                <div className="mt-3 flex items-end gap-1">
+                  <span className="font-display text-3xl font-semibold">R$ {Number(p.total_price).toLocaleString("pt-BR")}</span>
+                  {p.billing_period !== "lifetime" && <span className="text-xs text-muted-foreground">{periodLabel(p.billing_period)}</span>}
+                </div>
+                {p.billing_period !== "monthly" && p.billing_period !== "lifetime" && (
+                  <div className="text-[11px] text-muted-foreground">≈ R$ {Number(p.price_monthly).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}/mês</div>
+                )}
+                {p.description && <div className="mt-1 text-xs text-muted-foreground">{p.description}</div>}
+                {p.savings_label && <div className="mt-2 text-[11px] font-medium text-success">{p.savings_label}</div>}
+                {isFounder && remaining !== null && (
+                  <div className="mt-2 text-[11px] text-muted-foreground">{remaining} de {p.license_limit} vagas restantes</div>
+                )}
+                {sold ? (
+                  <div className="mt-6 flex w-full items-center justify-center rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-muted-foreground">Esgotado</div>
+                ) : (
+                  <Link to="/signup/agency" className={`mt-6 flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition ${p.featured ? "bg-primary text-primary-foreground shadow-glow hover:opacity-90" : "border border-border bg-card hover:bg-muted"}`}>
+                    Solicitar
+                  </Link>
+                )}
               </div>
-              <div className="mt-1 text-sm text-muted-foreground">{p.desc}</div>
-              <ul className="mt-6 space-y-2.5 text-sm">
-                {p.features.map((f)=>(<li key={f} className="flex items-center gap-2"><Check className="h-4 w-4 text-success" />{f}</li>))}
-              </ul>
-              <Link to="/app/dashboard" className={`mt-7 flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition ${p.featured ? "bg-primary text-primary-foreground shadow-glow hover:opacity-90" : "border border-border bg-card hover:bg-muted"}`}>
-                Começar
-              </Link>
-            </div>
-          ))}
+            );
+          })}
         </div>
+        {plans.some((p) => p.slug === "founder") && (
+          <p className="mx-auto mt-8 max-w-2xl text-center text-[11px] text-muted-foreground">
+            Licença vitalícia referente ao acesso às funcionalidades incluídas na V1, sujeita aos Termos de Uso, limites técnicos e política de uso justo. Serviços externos, integrações pagas e futuras funcionalidades premium podem ser cobrados separadamente.
+          </p>
+        )}
       </div>
     </section>
   );
