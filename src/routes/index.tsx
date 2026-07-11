@@ -291,35 +291,7 @@ function Pricing() {
   );
 }
 
-function Testimonials() {
-  const items = [
-    { name: "Maria Fontes", role: "CEO · Aurora Lives", text: "Reduzimos 60% do tempo em planilhas. A IA sozinha se pagou no primeiro mês." },
-    { name: "Ricardo Piva", role: "Owner · Vega Agency", text: "Substituímos 4 ferramentas. Meus gerentes finalmente veem tudo em um só lugar." },
-    { name: "Julia Ferrari", role: "COO · Prisma Studio", text: "O ranking gamificou a agência inteira. Nossos hosts nunca estiveram tão engajados." },
-  ];
-  return (
-    <section className="border-t border-border/50 px-4 py-24 md:px-6">
-      <div className="mx-auto max-w-6xl">
-        <h2 className="text-center font-display text-4xl font-semibold">Amado por agências de todo o Brasil</h2>
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {items.map((t)=>(
-            <div key={t.name} className="rounded-2xl border border-border bg-card/60 p-6">
-              <div className="flex gap-0.5">{Array.from({length:5}).map((_,i)=><Star key={i} className="h-4 w-4 fill-warning text-warning" />)}</div>
-              <p className="mt-4 text-sm leading-relaxed text-foreground/90">"{t.text}"</p>
-              <div className="mt-5 flex items-center gap-3">
-                <img src={`https://api.dicebear.com/9.x/glass/svg?seed=${encodeURIComponent(t.name)}`} className="h-9 w-9 rounded-full" alt="" />
-                <div>
-                  <div className="text-sm font-semibold">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+
 
 function FAQ() {
   const items = [
