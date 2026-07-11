@@ -88,10 +88,11 @@ function SubscriptionsPage() {
                       <span className={cn(
                         "rounded-md px-2 py-0.5 text-[11px] font-semibold",
                         s.status === "active" ? "bg-success/15 text-success"
+                          : s.status === "awaiting_payment" ? "bg-warning/15 text-warning"
                           : s.status === "trial" ? "bg-primary/15 text-primary"
                           : s.status === "suspended" ? "bg-warning/15 text-warning"
                           : "bg-destructive/15 text-destructive"
-                      )}>{AGENCY_STATUS_LABELS[uiStatus(s.status)]}</span>
+                      )}>{statusLabelOf(s.status)}</span>
                     </td>
                     <td className="py-3 pr-3">
                       <div className="flex items-center justify-end gap-1">
