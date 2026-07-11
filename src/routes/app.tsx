@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { useNotifications } from "@/hooks/use-data";
 import { ROLE_LABELS } from "@/lib/constants";
+import { Avatar } from "@/components/avatar";
 
 export const Route = createFileRoute("/app")({
   component: AppLayout,
@@ -156,10 +157,10 @@ function AppLayout() {
             {!collapsed && (
               <div className="mt-3 rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3">
                 <div className="flex items-center gap-3">
-                  <img src={user.avatar_url ?? ""} alt="" className="h-9 w-9 rounded-full" />
+                  <Avatar src={user.avatar_url} name={user.name} size={36} />
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold">{user.name}</div>
-                    <div className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]} · Livepulse</div>
+                    <div className="truncate text-sm font-semibold">{user.name || user.email}</div>
+                    <div className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]}</div>
                   </div>
                   <button
                     onClick={async () => { await signOut(); navigate({ to: "/login" }); }}
@@ -199,7 +200,7 @@ function AppLayout() {
               )}
             </Link>
             <div className="hidden items-center gap-2 rounded-lg border border-border bg-card/60 px-2 py-1 md:flex">
-              <img src={user.avatar_url ?? ""} alt="" className="h-6 w-6 rounded-full" />
+              <Avatar src={user.avatar_url} name={user.name} size={24} />
               <span className="text-xs font-medium">{ROLE_LABELS[user.role]}</span>
             </div>
           </header>

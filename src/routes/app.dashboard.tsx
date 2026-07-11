@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Avatar } from "@/components/avatar";
 import { useMemo } from "react";
 import { Wallet, TrendingUp, Users, Target } from "lucide-react";
 import { Card, PageHeader, StatCard, currency } from "@/components/app-shell";
@@ -57,7 +58,7 @@ function Dashboard() {
               {topHosts.map((h, i) => (
                 <div key={h.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/30 p-3 transition hover:bg-background/60">
                   <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-muted text-xs font-semibold text-muted-foreground">#{i + 1}</div>
-                  <img src={h.avatar_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${h.id}`} className="h-9 w-9 shrink-0 rounded-full" alt="" />
+                  <Avatar src={h.avatar_url} name={h.nickname} size={36} className="shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium">{h.nickname}</div>
                     <div className="truncate text-xs text-muted-foreground">{h.category ?? "—"} · {Number(h.live_hours)}h</div>

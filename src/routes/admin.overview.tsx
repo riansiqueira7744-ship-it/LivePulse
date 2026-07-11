@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Avatar } from "@/components/avatar";
 import { Card, PageHeader, StatCard, currency } from "@/components/app-shell";
 import { useAgencies, useSubscriptions } from "@/hooks/use-data";
 import { AGENCY_STATUS_LABELS, PLAN_LABELS } from "@/lib/constants";
@@ -42,7 +43,7 @@ function OverviewPage() {
           <div className="divide-y divide-border">
             {agencies.slice(0, 8).map((a) => (
               <div key={a.id} className="flex items-center gap-3 py-3">
-                <img src={a.logo_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${a.slug}`} alt="" className="h-9 w-9 rounded-lg border border-border" />
+                <Avatar src={a.logo_url} name={a.name} size={36} rounded="lg" className="border border-border" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{a.name}</div>
                   <div className="text-xs text-muted-foreground">{PLAN_LABELS[a.plan]} · {currency(Number(a.mrr))}/mês</div>

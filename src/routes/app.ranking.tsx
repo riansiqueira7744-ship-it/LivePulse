@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Avatar } from "@/components/avatar";
 import { useMemo, useState } from "react";
 import { Card, PageHeader, currency } from "@/components/app-shell";
 import { useHosts } from "@/hooks/use-data";
@@ -53,7 +54,7 @@ function RankingPage() {
                     </div>
                     <div className="font-display text-3xl font-bold text-muted-foreground/50">#{i + 1}</div>
                   </div>
-                  <img src={h.avatar_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${h.id}`} className="mt-4 h-16 w-16 rounded-full ring-2 ring-border" alt="" />
+                  <Avatar src={h.avatar_url} name={h.nickname} size={64} className="mt-4 ring-2 ring-border" />
                   <div className="mt-3 font-display text-xl font-semibold">{h.nickname}</div>
                   <div className="text-xs text-muted-foreground">{h.category ?? "—"}</div>
                   <div className="mt-4 flex items-end justify-between">
@@ -76,7 +77,7 @@ function RankingPage() {
               {rest.map((h, i) => (
                 <div key={h.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/30 p-3 transition hover:bg-background/60">
                   <div className="w-8 text-center font-display text-lg font-semibold text-muted-foreground">#{i + 4}</div>
-                  <img src={h.avatar_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${h.id}`} className="h-9 w-9 rounded-full" alt="" />
+                  <Avatar src={h.avatar_url} name={h.nickname} size={36} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{h.nickname}</div>
                     <div className="text-xs text-muted-foreground">{h.category ?? "—"}</div>

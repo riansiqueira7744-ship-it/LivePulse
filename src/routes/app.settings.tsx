@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Card, PageHeader } from "@/components/app-shell";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Building2, Users, Shield, Palette, Globe, Bell, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-context";
+import { agenciesService } from "@/services";
 
 export const Route = createFileRoute("/app/settings")({
   component: SettingsPage,
@@ -21,6 +23,32 @@ const tabs = [
 
 function SettingsPage() {
   const [active, setActive] = useState("company");
+  const { currentAgency, user } = useAuth();
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [country, setCountry] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const canEditAgency = user?.role === "agency_owner" || user?.role === "super_admin";
+
+  useEffect(() => {
+    if (currentAgency) {
+      setName(currentAgency.name ?? "");
+      setSlug(currentAgency.slug ?? "");
+    }
+  }, [currentAgency]);
+
+  const saveAgency = async () => {
+    if (!currentAgency) return;
+    setSaving(true); setMsg(null);
+    try {
+      await agenciesService.update(currentAgency.id, { name, slug, country: country || null });
+      setMsg("Alterações salvas.");
+    } catch (err) {
+      setMsg(err instanceof Error ? err.message : "Falha ao salvar");
+    } finally { setSaving(false); }
+  };
+
   return (
     <div>
       <PageHeader title="Configurações" description="Preferências da agência" />
@@ -46,14 +74,28 @@ function SettingsPage() {
                 <h3 className="text-lg font-semibold">Dados da empresa</h3>
                 <p className="text-xs text-muted-foreground">Aparecem nos relatórios e faturas.</p>
               </div>
-              <Field label="Nome da agência" defaultValue="Livepulse Studio" />
-              <Field label="CNPJ" defaultValue="42.198.331/0001-08" />
-              <Field label="E-mail de contato" defaultValue="contato@livepulse.io" />
-              <Field label="Site" defaultValue="https://livepulse.io" />
-              <div className="flex justify-end gap-2 pt-4">
-                <button className="rounded-lg border border-border px-3 py-1.5 text-xs">Cancelar</button>
-                <button className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Salvar alterações</button>
-              </div>
+              {!currentAgency ? (
+                <div className="rounded-lg border border-dashed border-border bg-background/40 p-6 text-center text-sm text-muted-foreground">
+                  Você ainda não está vinculado a uma agência.
+                </div>
+              ) : (
+                <>
+                  <Field label="Nome da agência" value={name} onChange={setName} disabled={!canEditAgency} />
+                  <Field label="Identificador (slug)" value={slug} onChange={setSlug} disabled={!canEditAgency} />
+                  <Field label="País" value={country} onChange={setCountry} placeholder="BR" disabled={!canEditAgency} />
+                  {msg && <div className="text-xs text-muted-foreground">{msg}</div>}
+                  <div className="flex justify-end gap-2 pt-4">
+                    <button className="rounded-lg border border-border px-3 py-1.5 text-xs">Cancelar</button>
+                    <button
+                      onClick={saveAgency}
+                      disabled={!canEditAgency || saving}
+                      className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-50"
+                    >
+                      {saving ? "Salvando…" : "Salvar alterações"}
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           )}
           {active === "appearance" && (
@@ -91,11 +133,17 @@ function SettingsPage() {
   );
 }
 
-function Field({ label, defaultValue }: { label: string; defaultValue: string }) {
+function Field({ label, value, onChange, placeholder, disabled }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean }) {
   return (
     <div>
       <label className="text-xs font-medium text-muted-foreground">{label}</label>
-      <input defaultValue={defaultValue} className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background/40 px-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
+      <input
+        value={value}
+        onChange={(e)=>onChange(e.target.value)}
+        placeholder={placeholder}
+        disabled={disabled}
+        className="mt-1.5 h-10 w-full rounded-lg border border-border bg-background/40 px-3 text-sm focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60"
+      />
     </div>
   );
 }
