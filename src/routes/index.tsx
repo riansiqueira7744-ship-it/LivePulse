@@ -66,28 +66,26 @@ function Hero() {
       <div className="mx-auto max-w-5xl text-center">
         <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
           <Sparkles className="h-3 w-3 text-primary" />
-          Nova geração — IA nativa · Beta pública aberta
+          V1 disponível — cadastro aberto para hosts e agências
         </div>
         <h1 className="mt-6 font-display text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
           O sistema operacional das <br className="hidden md:block" />
           <span className="gradient-text">agências de live streaming</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          Substitua Excel, PDFs e WhatsApp por uma plataforma única. Gerencie hosts, metas, comissões,
-          financeiro e comunidade — com um copiloto de IA que trabalha por você.
+          Gerencie hosts, gerentes, metas, comissões e financeiro em um só painel. Cadastro de Host 100% gratuito.
         </p>
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-          <Link to="/app/dashboard" className="group inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90">
-            Explorar plataforma <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+          <Link to="/signup/host" className="group inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90">
+            Criar conta grátis de Host <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </Link>
-          <button className="inline-flex items-center gap-2 rounded-xl border border-border bg-card/60 px-5 py-3 text-sm font-medium backdrop-blur hover:bg-card">
-            <Play className="h-4 w-4" /> Ver demo (2 min)
-          </button>
+          <Link to="/signup/agency" className="inline-flex items-center gap-2 rounded-xl border border-border bg-card/60 px-5 py-3 text-sm font-medium backdrop-blur hover:bg-card">
+            <Play className="h-4 w-4" /> Solicitar Agência
+          </Link>
         </div>
-        <div className="mt-6 flex items-center justify-center gap-6 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> Sem cartão</span>
-          <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> Setup em 5 min</span>
-          <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> Migração assistida</span>
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> Host grátis para sempre</span>
+          <span className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-success" /> Ativação assistida por WhatsApp</span>
         </div>
       </div>
 
