@@ -7,18 +7,22 @@ import { supabase } from "@/integrations/supabase/client";
 export type DbAgency = {
   id: string; name: string; slug: string; logo_url: string | null;
   country: string | null; city: string | null;
-  plan: "starter" | "growth" | "scale" | "enterprise";
-  status: "active" | "trial" | "suspended" | "cancelled";
+  plan: string;
+  status: string;
   mrr: number; hosts_count: number; managers_count: number;
   owner_id: string | null; created_at: string;
 };
 
 export type DbSubscription = {
   id: string; agency_id: string;
-  plan: DbAgency["plan"];
-  status: "active" | "trial" | "suspended" | "cancelled" | "past_due" | "awaiting_payment";
+  plan: string;
+  status: string;
   price_monthly: number; currency: string; seats: number;
   trial_ends_at: string | null; current_period_end: string | null;
+  billing_period?: string;
+  total_price?: number | null;
+  activated_at?: string | null;
+  payment_notes?: string | null;
 };
 
 export type DbManager = {
