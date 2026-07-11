@@ -1,15 +1,15 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Card, PageHeader, currency } from "@/components/app-shell";
-import { mockAgencies } from "@/lib/mock-agencies";
+import { useAgencies, useCreateAgency, useUpdateAgency, useDeleteAgency, type DbAgency } from "@/hooks/use-data";
 import { AGENCY_STATUS_LABELS, PLAN_LABELS } from "@/lib/constants";
-import type { Agency, AgencyStatus, PlanTier } from "@/types";
-import { useAuth } from "@/lib/auth-context";
+import type { AgencyStatus, PlanTier } from "@/types";
 import {
-  Search, Plus, Filter, MoreHorizontal, LogIn, Pause, Play, Ban, Trash2, Edit,
+  Search, Plus, Filter, MoreHorizontal, Pause, Play, Ban, Trash2, Edit,
   Users, UserCog, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/agencies")({
   component: AgenciesPage,
@@ -19,33 +19,36 @@ export const Route = createFileRoute("/admin/agencies")({
 const ALL_STATUSES: AgencyStatus[] = ["active", "trial", "suspended", "canceled"];
 const ALL_PLANS: PlanTier[] = ["starter", "growth", "scale", "enterprise"];
 
+// DB uses "cancelled" while UI type is "canceled" — normalize.
+const dbStatus = (s: AgencyStatus): DbAgency["status"] => s === "canceled" ? "cancelled" : s as DbAgency["status"];
+const uiStatus = (s: DbAgency["status"]): AgencyStatus => s === "cancelled" ? "canceled" : s;
+
 function AgenciesPage() {
-  const [agencies, setAgencies] = useState<Agency[]>(mockAgencies);
+  const { data: agencies = [], isLoading } = useAgencies();
+  const createMut = useCreateAgency();
+  const updateMut = useUpdateAgency();
+  const deleteMut = useDeleteAgency();
+
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<AgencyStatus | "all">("all");
   const [plan, setPlan] = useState<PlanTier | "all">("all");
   const [country, setCountry] = useState<string>("all");
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [editing, setEditing] = useState<Agency | null>(null);
+  const [editing, setEditing] = useState<DbAgency | null>(null);
   const [creating, setCreating] = useState(false);
-  const { switchAgency } = useAuth();
-  const navigate = useNavigate();
 
-  const countries = useMemo(() => Array.from(new Set(agencies.map((a) => a.country))), [agencies]);
+  const countries = useMemo(() => Array.from(new Set(agencies.map((a) => a.country).filter(Boolean) as string[])), [agencies]);
 
   const filtered = agencies.filter((a) => {
     if (q && !a.name.toLowerCase().includes(q.toLowerCase())) return false;
-    if (status !== "all" && a.status !== status) return false;
+    if (status !== "all" && uiStatus(a.status) !== status) return false;
     if (plan !== "all" && a.plan !== plan) return false;
     if (country !== "all" && a.country !== country) return false;
     return true;
   });
 
-  const update = (id: string, patch: Partial<Agency>) =>
-    setAgencies((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)));
-  const remove = (id: string) => setAgencies((prev) => prev.filter((a) => a.id !== id));
-
-  const access = (a: Agency) => { switchAgency(a.id); navigate({ to: "/app/dashboard" }); };
+  const update = (id: string, patch: Partial<DbAgency>) => updateMut.mutate({ id, patch }, { onSuccess: () => toast.success("Agência atualizada") });
+  const remove = (id: string) => { if (confirm("Excluir esta agência? Todos os dados vinculados serão removidos.")) deleteMut.mutate(id, { onSuccess: () => toast.success("Agência excluída") }); };
 
   return (
     <div>
@@ -78,7 +81,6 @@ function AgenciesPage() {
             <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
               <tr className="border-b border-border">
                 <th className="py-2 pr-3 font-medium">Agência</th>
-                <th className="py-2 pr-3 font-medium">Dono</th>
                 <th className="py-2 pr-3 font-medium">Plano</th>
                 <th className="py-2 pr-3 font-medium">Status</th>
                 <th className="py-2 pr-3 font-medium">Equipe</th>
@@ -92,31 +94,25 @@ function AgenciesPage() {
                 <tr key={a.id} className="group border-b border-border/50 last:border-0 hover:bg-card/50">
                   <td className="py-3 pr-3">
                     <div className="flex items-center gap-3">
-                      <img src={a.logo_url ?? ""} className="h-9 w-9 rounded-lg border border-border" alt="" />
+                      <img src={a.logo_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${a.slug}`} className="h-9 w-9 rounded-lg border border-border" alt="" />
                       <div className="min-w-0">
                         <div className="truncate font-medium">{a.name}</div>
                         <div className="truncate text-xs text-muted-foreground">/{a.slug}</div>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 pr-3 text-xs text-muted-foreground">{a.owner_id.replace("usr_owner_", "Owner #")}</td>
                   <td className="py-3 pr-3"><span className="rounded-md border border-border bg-card/60 px-2 py-0.5 text-[11px] font-semibold">{PLAN_LABELS[a.plan]}</span></td>
-                  <td className="py-3 pr-3">
-                    <StatusPill status={a.status} />
-                  </td>
+                  <td className="py-3 pr-3"><StatusPill status={uiStatus(a.status)} /></td>
                   <td className="py-3 pr-3">
                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1"><Users className="h-3 w-3" /> {a.hosts_count}</span>
                       <span className="inline-flex items-center gap-1"><UserCog className="h-3 w-3" /> {a.managers_count}</span>
                     </div>
                   </td>
-                  <td className="py-3 pr-3 font-semibold">{currency(a.mrr)}</td>
-                  <td className="py-3 pr-3 text-xs">{a.country}</td>
+                  <td className="py-3 pr-3 font-semibold">{currency(Number(a.mrr))}</td>
+                  <td className="py-3 pr-3 text-xs">{a.country ?? "—"}</td>
                   <td className="py-3 pr-3 text-right">
                     <div className="relative inline-flex items-center gap-1">
-                      <button onClick={() => access(a)} className="inline-flex items-center gap-1 rounded-md border border-border bg-card/60 px-2 py-1 text-[11px] font-semibold hover:border-primary/50 hover:text-primary">
-                        <LogIn className="h-3 w-3" /> Acessar
-                      </button>
                       <button onClick={() => setOpenMenu(openMenu === a.id ? null : a.id)} className="grid h-7 w-7 place-items-center rounded-md border border-border bg-card/60 hover:text-foreground">
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
@@ -129,7 +125,7 @@ function AgenciesPage() {
                           {a.status === "active" && (
                             <MenuItem icon={<Pause className="h-3.5 w-3.5" />} onClick={() => { update(a.id, { status: "suspended" }); setOpenMenu(null); }}>Suspender</MenuItem>
                           )}
-                          <MenuItem icon={<Ban className="h-3.5 w-3.5" />} onClick={() => { update(a.id, { status: "canceled" }); setOpenMenu(null); }}>Bloquear</MenuItem>
+                          <MenuItem icon={<Ban className="h-3.5 w-3.5" />} onClick={() => { update(a.id, { status: "cancelled" }); setOpenMenu(null); }}>Cancelar</MenuItem>
                           <MenuItem icon={<Trash2 className="h-3.5 w-3.5" />} danger onClick={() => { remove(a.id); setOpenMenu(null); }}>Excluir</MenuItem>
                         </div>
                       )}
@@ -137,8 +133,11 @@ function AgenciesPage() {
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={8} className="py-12 text-center text-sm text-muted-foreground">Nenhuma agência encontrada com esses filtros.</td></tr>
+              {!isLoading && filtered.length === 0 && (
+                <tr><td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">Nenhuma agência encontrada.</td></tr>
+              )}
+              {isLoading && (
+                <tr><td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">Carregando…</td></tr>
               )}
             </tbody>
           </table>
@@ -149,10 +148,9 @@ function AgenciesPage() {
         <AgencyDrawer
           agency={editing}
           onClose={() => { setCreating(false); setEditing(null); }}
-          onSave={(a) => {
-            if (editing) update(editing.id, a);
-            else setAgencies((prev) => [{ ...(a as Agency), id: `agc_${Date.now()}` }, ...prev]);
-            setCreating(false); setEditing(null);
+          onSave={async (a) => {
+            if (editing) updateMut.mutate({ id: editing.id, patch: a }, { onSuccess: () => { toast.success("Salvo"); setEditing(null); } });
+            else createMut.mutate(a, { onSuccess: () => { toast.success("Agência criada"); setCreating(false); } });
           }}
         />
       )}
@@ -189,12 +187,12 @@ function MenuItem({ children, icon, onClick, danger }: { children: React.ReactNo
   );
 }
 
-function AgencyDrawer({ agency, onClose, onSave }: { agency: Agency | null; onClose: () => void; onSave: (a: Partial<Agency>) => void }) {
+function AgencyDrawer({ agency, onClose, onSave }: { agency: DbAgency | null; onClose: () => void; onSave: (a: Partial<DbAgency>) => void }) {
   const [name, setName] = useState(agency?.name ?? "");
   const [slug, setSlug] = useState(agency?.slug ?? "");
   const [country, setCountry] = useState(agency?.country ?? "BR");
   const [plan, setPlan] = useState<PlanTier>(agency?.plan ?? "starter");
-  const [status, setStatus] = useState<AgencyStatus>(agency?.status ?? "trial");
+  const [status, setStatus] = useState<DbAgency["status"]>(agency?.status ?? "trial");
 
   return (
     <div className="fixed inset-0 z-50 flex items-stretch justify-end bg-black/40 backdrop-blur-sm" onClick={onClose}>
@@ -212,13 +210,13 @@ function AgencyDrawer({ agency, onClose, onSave }: { agency: Agency | null; onCl
           <Field label="País (ISO)" value={country} onChange={setCountry} placeholder="BR" />
           <div className="grid grid-cols-2 gap-3">
             <SelectField label="Plano" value={plan} onChange={(v) => setPlan(v as PlanTier)} options={ALL_PLANS.map((p) => ({ v: p, l: PLAN_LABELS[p] }))} />
-            <SelectField label="Status" value={status} onChange={(v) => setStatus(v as AgencyStatus)} options={ALL_STATUSES.map((s) => ({ v: s, l: AGENCY_STATUS_LABELS[s] }))} />
+            <SelectField label="Status" value={status} onChange={(v) => setStatus(dbStatus(v as AgencyStatus))} options={ALL_STATUSES.map((s) => ({ v: s, l: AGENCY_STATUS_LABELS[s] }))} />
           </div>
         </div>
         <div className="flex items-center justify-end gap-2 border-t border-border p-4">
           <button onClick={onClose} className="rounded-lg border border-border px-3 py-1.5 text-xs">Cancelar</button>
           <button
-            onClick={() => onSave({ name, slug, country, plan, status, hosts_count: agency?.hosts_count ?? 0, managers_count: agency?.managers_count ?? 0, mrr: agency?.mrr ?? 0, owner_id: agency?.owner_id ?? "usr_owner_new", logo_url: agency?.logo_url ?? null, created_at: agency?.created_at ?? new Date().toISOString() })}
+            onClick={() => onSave({ name, slug, country, plan, status })}
             className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
             {agency ? "Salvar alterações" : "Criar agência"}
           </button>

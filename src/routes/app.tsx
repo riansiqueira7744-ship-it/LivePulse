@@ -1,5 +1,5 @@
-import { Link, Outlet, useRouterState, createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { Link, Outlet, useRouterState, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, Users, UserCog, Wallet, Percent, Target, Trophy,
   Sparkles, FileBarChart, MessageSquare, Settings, User, Bell, Search,
@@ -7,23 +7,12 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
-import { notificationsService } from "@/services";
+import { useNotifications } from "@/hooks/use-data";
 import { ROLE_LABELS } from "@/lib/constants";
 
 export const Route = createFileRoute("/app")({
-  beforeLoad: () => {
-    // Mock auth guard — reads persisted session synchronously.
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem("livepulse.auth");
-      if (!raw) throw redirect({ to: "/login" });
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in (e as object)) throw e;
-    }
-  },
   component: AppLayout,
 });
-
 
 const nav = [
   { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -47,16 +36,24 @@ const bottomNav = [
 function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const { user, signOut, canAccess } = useAuth();
-  const unread = notificationsService.unreadCount();
+  const { user, loading, signOut, canAccess } = useAuth();
+  const navigate = useNavigate();
+  const { data: notifs = [] } = useNotifications();
+  const unread = notifs.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/login" });
+  }, [loading, user, navigate]);
+
+  if (loading || !user) {
+    return <div className="mesh-bg grid min-h-screen place-items-center text-sm text-muted-foreground">Carregando…</div>;
+  }
 
   const visibleNav = nav.filter((item) => canAccess(item.to));
-
 
   return (
     <div className="mesh-bg min-h-screen">
       <div className="flex min-h-screen">
-        {/* Sidebar */}
         <aside
           className={cn(
             "sticky top-0 z-30 hidden h-screen shrink-0 flex-col border-r border-sidebar-border bg-sidebar/70 backdrop-blur-xl transition-all duration-300 md:flex",
@@ -118,7 +115,7 @@ function AppLayout() {
             })}
           </nav>
 
-          {user?.role === "super_admin" && (
+          {user.role === "super_admin" && (
             <div className="border-t border-sidebar-border px-3 py-2">
               {!collapsed && (
                 <div className="px-2 pb-1.5 pt-1 text-[10.5px] font-medium uppercase tracking-widest text-warning/80">
@@ -134,7 +131,6 @@ function AppLayout() {
               </Link>
             </div>
           )}
-
 
           <div className="space-y-0.5 border-t border-sidebar-border p-3">
             {bottomNav.map((item) => {
@@ -156,7 +152,7 @@ function AppLayout() {
                 </Link>
               );
             })}
-            {!collapsed && user && (
+            {!collapsed && (
               <div className="mt-3 rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3">
                 <div className="flex items-center gap-3">
                   <img src={user.avatar_url ?? ""} alt="" className="h-9 w-9 rounded-full" />
@@ -164,20 +160,19 @@ function AppLayout() {
                     <div className="truncate text-sm font-semibold">{user.name}</div>
                     <div className="truncate text-xs text-muted-foreground">{ROLE_LABELS[user.role]} · Livepulse</div>
                   </div>
-                  <Link
-                    to="/login"
-                    onClick={() => signOut()}
+                  <button
+                    onClick={async () => { await signOut(); navigate({ to: "/login" }); }}
                     className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
+                    aria-label="Sair"
                   >
                     <LogOut className="h-4 w-4" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             )}
           </div>
         </aside>
 
-        {/* Main */}
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border/70 bg-background/70 px-4 backdrop-blur-xl md:px-6">
             <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -202,16 +197,10 @@ function AppLayout() {
                 </span>
               )}
             </Link>
-            <div className="hidden items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 md:flex">
-              <span className="h-2 w-2 animate-pulse-ring rounded-full bg-success" />
-              <span className="text-xs font-medium">42 hosts online</span>
+            <div className="hidden items-center gap-2 rounded-lg border border-border bg-card/60 px-2 py-1 md:flex">
+              <img src={user.avatar_url ?? ""} alt="" className="h-6 w-6 rounded-full" />
+              <span className="text-xs font-medium">{ROLE_LABELS[user.role]}</span>
             </div>
-            {user && (
-              <div className="hidden items-center gap-2 rounded-lg border border-border bg-card/60 px-2 py-1 md:flex">
-                <img src={user.avatar_url ?? ""} alt="" className="h-6 w-6 rounded-full" />
-                <span className="text-xs font-medium">{ROLE_LABELS[user.role]}</span>
-              </div>
-            )}
           </header>
 
           <main className="flex-1 p-4 md:p-8">

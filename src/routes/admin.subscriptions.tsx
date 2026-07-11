@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Card, PageHeader, StatCard, currency } from "@/components/app-shell";
-import { mockAgencies, mockSubscriptions } from "@/lib/mock-agencies";
+import { useAgencies, useSubscriptions, useUpdateSubscription, type DbSubscription } from "@/hooks/use-data";
 import { AGENCY_STATUS_LABELS, PLAN_LABELS } from "@/lib/constants";
-import type { AgencyStatus, PlanTier, Subscription } from "@/types";
-import { CreditCard, DollarSign, Users, TrendingUp, Play, Pause, CheckCircle2, Edit, X } from "lucide-react";
+import type { AgencyStatus, PlanTier } from "@/types";
+import { CreditCard, DollarSign, Users, TrendingUp, Play, Pause, Edit, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/subscriptions")({
   component: SubscriptionsPage,
@@ -15,40 +16,36 @@ export const Route = createFileRoute("/admin/subscriptions")({
 const ALL_STATUSES: AgencyStatus[] = ["active", "trial", "suspended", "canceled"];
 const ALL_PLANS: PlanTier[] = ["starter", "growth", "scale", "enterprise"];
 
-const history = [
-  { id: "inv_1024", agency: "Livepulse Studio", amount: 1490, date: "01/07/2026", status: "Pago" },
-  { id: "inv_1023", agency: "Horizon Media",    amount: 3490, date: "01/07/2026", status: "Pago" },
-  { id: "inv_1022", agency: "Neon Stars",       amount: 690,  date: "01/07/2026", status: "Pago" },
-  { id: "inv_1021", agency: "Aurora Creators",  amount: 690,  date: "01/07/2026", status: "Falhou" },
-  { id: "inv_1020", agency: "Livepulse Studio", amount: 1490, date: "01/06/2026", status: "Pago" },
-  { id: "inv_1019", agency: "Horizon Media",    amount: 3490, date: "01/06/2026", status: "Pago" },
-];
+const uiStatus = (s: DbSubscription["status"]): AgencyStatus =>
+  s === "cancelled" ? "canceled" : s === "past_due" ? "suspended" : s as AgencyStatus;
 
 function SubscriptionsPage() {
-  const [subs, setSubs] = useState<Subscription[]>(mockSubscriptions);
+  const { data: subs = [] } = useSubscriptions();
+  const { data: agencies = [] } = useAgencies();
+  const updateMut = useUpdateSubscription();
+
   const [status, setStatus] = useState<AgencyStatus | "all">("all");
   const [plan, setPlan] = useState<PlanTier | "all">("all");
-  const [editing, setEditing] = useState<Subscription | null>(null);
+  const [editing, setEditing] = useState<DbSubscription | null>(null);
 
-  const totalMrr = subs.filter((s) => s.status === "active").reduce((a, s) => a + s.price_monthly, 0);
+  const totalMrr = subs.filter((s) => s.status === "active").reduce((a, s) => a + Number(s.price_monthly), 0);
   const arr = totalMrr * 12;
   const activeCount = subs.filter((s) => s.status === "active").length;
   const trialCount = subs.filter((s) => s.status === "trial").length;
 
-  const filtered = subs.filter((s) => (status === "all" || s.status === status) && (plan === "all" || s.plan === plan));
+  const filtered = subs.filter((s) => (status === "all" || uiStatus(s.status) === status) && (plan === "all" || s.plan === plan));
 
-  const update = (id: string, patch: Partial<Subscription>) =>
-    setSubs((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+  const update = (id: string, patch: Partial<DbSubscription>) => updateMut.mutate({ id, patch }, { onSuccess: () => toast.success("Atualizado") });
 
   return (
     <div>
       <PageHeader title="Assinaturas" description="Planos, faturamento recorrente e pagamentos" />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="MRR" value={currency(totalMrr)} icon={<DollarSign className="h-4 w-4" />} gradient delta="+12,4%" positive />
-        <StatCard label="ARR estimado" value={currency(arr)} icon={<TrendingUp className="h-4 w-4" />} delta="+18%" positive />
-        <StatCard label="Assinaturas ativas" value={String(activeCount)} icon={<CreditCard className="h-4 w-4" />} delta="+1" positive />
-        <StatCard label="Em trial" value={String(trialCount)} icon={<Users className="h-4 w-4" />} delta="+1" positive />
+        <StatCard label="MRR" value={currency(totalMrr)} icon={<DollarSign className="h-4 w-4" />} gradient positive delta="ativas" />
+        <StatCard label="ARR estimado" value={currency(arr)} icon={<TrendingUp className="h-4 w-4" />} positive delta="projeção" />
+        <StatCard label="Assinaturas ativas" value={String(activeCount)} icon={<CreditCard className="h-4 w-4" />} positive delta="produção" />
+        <StatCard label="Em trial" value={String(trialCount)} icon={<Users className="h-4 w-4" />} positive delta="testando" />
       </div>
 
       <Card className="mt-6">
@@ -73,27 +70,27 @@ function SubscriptionsPage() {
             </thead>
             <tbody>
               {filtered.map((s) => {
-                const agency = mockAgencies.find((a) => a.id === s.agency_id);
+                const agency = agencies.find((a) => a.id === s.agency_id);
                 return (
                   <tr key={s.id} className="border-b border-border/50 last:border-0 hover:bg-card/50">
                     <td className="py-3 pr-3">
                       <div className="flex items-center gap-3">
-                        <img src={agency?.logo_url ?? ""} className="h-8 w-8 rounded-lg border border-border" alt="" />
-                        <span className="font-medium">{agency?.name}</span>
+                        <img src={agency?.logo_url ?? `https://api.dicebear.com/9.x/glass/svg?seed=${agency?.slug ?? s.agency_id}`} className="h-8 w-8 rounded-lg border border-border" alt="" />
+                        <span className="font-medium">{agency?.name ?? "—"}</span>
                       </div>
                     </td>
                     <td className="py-3 pr-3"><span className="rounded-md border border-border bg-card/60 px-2 py-0.5 text-[11px] font-semibold">{PLAN_LABELS[s.plan]}</span></td>
-                    <td className="py-3 pr-3 font-semibold">{currency(s.price_monthly)}</td>
+                    <td className="py-3 pr-3 font-semibold">{currency(Number(s.price_monthly))}</td>
                     <td className="py-3 pr-3">{s.seats}</td>
-                    <td className="py-3 pr-3 text-xs text-muted-foreground">{new Date(s.next_invoice_at).toLocaleDateString("pt-BR")}</td>
+                    <td className="py-3 pr-3 text-xs text-muted-foreground">{s.current_period_end ? new Date(s.current_period_end).toLocaleDateString("pt-BR") : "—"}</td>
                     <td className="py-3 pr-3">
                       <span className={cn(
                         "rounded-md px-2 py-0.5 text-[11px] font-semibold",
                         s.status === "active" ? "bg-success/15 text-success"
-                        : s.status === "trial" ? "bg-primary/15 text-primary"
-                        : s.status === "suspended" ? "bg-warning/15 text-warning"
-                        : "bg-destructive/15 text-destructive"
-                      )}>{AGENCY_STATUS_LABELS[s.status]}</span>
+                          : s.status === "trial" ? "bg-primary/15 text-primary"
+                          : s.status === "suspended" ? "bg-warning/15 text-warning"
+                          : "bg-destructive/15 text-destructive"
+                      )}>{AGENCY_STATUS_LABELS[uiStatus(s.status)]}</span>
                     </td>
                     <td className="py-3 pr-3">
                       <div className="flex items-center justify-end gap-1">
@@ -109,47 +106,17 @@ function SubscriptionsPage() {
                             <Pause className="h-3 w-3" /> Suspender
                           </button>
                         )}
-                        <button onClick={() => update(s.id, { next_invoice_at: new Date(Date.now() + 86400_000 * 30).toISOString() })} className="inline-flex items-center gap-1 rounded-md border border-border bg-card/60 px-2 py-1 text-[11px] font-semibold hover:border-success/50 hover:text-success">
-                          <CheckCircle2 className="h-3 w-3" /> Marcar pago
-                        </button>
                       </div>
                     </td>
                   </tr>
                 );
               })}
+              {filtered.length === 0 && (
+                <tr><td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">Nenhuma assinatura registrada.</td></tr>
+              )}
             </tbody>
           </table>
         </div>
-      </Card>
-
-      <Card title="Histórico de faturas" className="mt-6">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
-              <tr className="border-b border-border">
-                <th className="py-2 pr-3 font-medium">Fatura</th>
-                <th className="py-2 pr-3 font-medium">Agência</th>
-                <th className="py-2 pr-3 font-medium">Valor</th>
-                <th className="py-2 pr-3 font-medium">Data</th>
-                <th className="py-2 pr-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((h) => (
-                <tr key={h.id} className="border-b border-border/50 last:border-0">
-                  <td className="py-2.5 pr-3 font-mono text-xs">{h.id.toUpperCase()}</td>
-                  <td className="py-2.5 pr-3">{h.agency}</td>
-                  <td className="py-2.5 pr-3 font-semibold">{currency(h.amount)}</td>
-                  <td className="py-2.5 pr-3 text-xs text-muted-foreground">{h.date}</td>
-                  <td className="py-2.5 pr-3">
-                    <span className={cn("rounded-md px-2 py-0.5 text-[11px] font-semibold", h.status === "Pago" ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive")}>{h.status}</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-4 text-xs text-muted-foreground">Estrutura pronta para integração com gateway de pagamento (Stripe / Paddle) — hoje utilizando dados mock.</p>
       </Card>
 
       {editing && (
@@ -170,9 +137,9 @@ function SelectChip({ label, value, onChange, options }: { label: string; value:
   );
 }
 
-function EditDrawer({ sub, onClose, onSave }: { sub: Subscription; onClose: () => void; onSave: (p: Partial<Subscription>) => void }) {
+function EditDrawer({ sub, onClose, onSave }: { sub: DbSubscription; onClose: () => void; onSave: (p: Partial<DbSubscription>) => void }) {
   const [plan, setPlan] = useState<PlanTier>(sub.plan);
-  const [price, setPrice] = useState<number>(sub.price_monthly);
+  const [price, setPrice] = useState<number>(Number(sub.price_monthly));
   const [seats, setSeats] = useState<number>(sub.seats);
 
   return (

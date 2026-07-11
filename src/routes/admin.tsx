@@ -1,25 +1,14 @@
-import { Link, Outlet, useRouterState, createFileRoute, redirect } from "@tanstack/react-router";
-import { useState } from "react";
+import { Link, Outlet, useRouterState, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   Crown, LayoutDashboard, Building2, CreditCard, LifeBuoy, Megaphone,
-  ChevronLeft, ChevronRight, LogOut, Zap, Search, Bell, ArrowLeft,
+  ChevronLeft, ChevronRight, LogOut, Search, Bell, ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { ROLE_LABELS } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin")({
-  beforeLoad: () => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem("livepulse.auth");
-      if (!raw) throw redirect({ to: "/login" });
-      const u = JSON.parse(raw);
-      if (u?.role !== "super_admin") throw redirect({ to: "/app/dashboard" });
-    } catch (e) {
-      if (e && typeof e === "object" && "to" in (e as object)) throw e;
-    }
-  },
   component: AdminLayout,
 });
 
@@ -34,7 +23,18 @@ const nav = [
 function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) { navigate({ to: "/login" }); return; }
+    if (user.role !== "super_admin") { navigate({ to: "/app/dashboard" }); return; }
+  }, [loading, user, navigate]);
+
+  if (loading || !user || user.role !== "super_admin") {
+    return <div className="mesh-bg grid min-h-screen place-items-center text-sm text-muted-foreground">Carregando…</div>;
+  }
 
   return (
     <div className="mesh-bg min-h-screen">
@@ -57,34 +57,23 @@ function AdminLayout() {
                 </div>
               )}
             </Link>
-            <button
-              onClick={() => setCollapsed((c) => !c)}
-              className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-            >
+            <button onClick={() => setCollapsed((c) => !c)} className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground">
               {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </button>
           </div>
 
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-2">
             {!collapsed && (
-              <div className="px-2 pb-1.5 pt-3 text-[10.5px] font-medium uppercase tracking-widest text-muted-foreground/70">
-                Plataforma
-              </div>
+              <div className="px-2 pb-1.5 pt-3 text-[10.5px] font-medium uppercase tracking-widest text-muted-foreground/70">Plataforma</div>
             )}
             {nav.map((item) => {
               const active = path.startsWith(item.to);
               const Icon = item.icon;
               return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "group relative flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition",
-                    active
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-                  )}
-                >
+                <Link key={item.to} to={item.to} className={cn(
+                  "group relative flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition",
+                  active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                )}>
                   {active && <span className="absolute inset-y-1.5 left-0 w-0.5 rounded-r bg-warning" />}
                   <Icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-warning")} />
                   {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
@@ -94,14 +83,11 @@ function AdminLayout() {
           </nav>
 
           <div className="space-y-0.5 border-t border-sidebar-border p-3">
-            <Link
-              to="/app/dashboard"
-              className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-sidebar-foreground/75 transition hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-            >
+            <Link to="/app/dashboard" className="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium text-sidebar-foreground/75 transition hover:bg-sidebar-accent/60 hover:text-sidebar-foreground">
               <ArrowLeft className="h-[18px] w-[18px]" />
               {!collapsed && <span>Painel da agência</span>}
             </Link>
-            {!collapsed && user && (
+            {!collapsed && (
               <div className="mt-3 rounded-xl border border-sidebar-border bg-sidebar-accent/40 p-3">
                 <div className="flex items-center gap-3">
                   <img src={user.avatar_url ?? ""} alt="" className="h-9 w-9 rounded-full" />
@@ -109,13 +95,9 @@ function AdminLayout() {
                     <div className="truncate text-sm font-semibold">{user.name}</div>
                     <div className="truncate text-xs text-warning">{ROLE_LABELS[user.role]}</div>
                   </div>
-                  <Link
-                    to="/login"
-                    onClick={() => signOut()}
-                    className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-                  >
+                  <button onClick={async () => { await signOut(); navigate({ to: "/login" }); }} className="grid h-8 w-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground" aria-label="Sair">
                     <LogOut className="h-4 w-4" />
-                  </Link>
+                  </button>
                 </div>
               </div>
             )}
@@ -127,10 +109,7 @@ function AdminLayout() {
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <div className="relative w-full max-w-md">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  placeholder="Pesquisar agências, planos, tickets…"
-                  className="h-9 w-full rounded-lg border border-border bg-card/60 pl-9 pr-3 text-sm placeholder:text-muted-foreground/70 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
+                <input placeholder="Pesquisar agências, planos, tickets…" className="h-9 w-full rounded-lg border border-border bg-card/60 pl-9 pr-3 text-sm placeholder:text-muted-foreground/70 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/20" />
               </div>
             </div>
             <div className="hidden items-center gap-2 rounded-lg border border-border bg-card/60 px-2.5 py-1.5 md:flex">
