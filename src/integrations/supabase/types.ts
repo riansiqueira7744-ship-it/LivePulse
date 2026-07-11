@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           hosts_count: number
           id: string
+          livepulse_id: string | null
           logo_url: string | null
           managers_count: number
           mrr: number
@@ -37,6 +38,7 @@ export type Database = {
           created_at?: string
           hosts_count?: number
           id?: string
+          livepulse_id?: string | null
           logo_url?: string | null
           managers_count?: number
           mrr?: number
@@ -53,6 +55,7 @@ export type Database = {
           created_at?: string
           hosts_count?: number
           id?: string
+          livepulse_id?: string | null
           logo_url?: string | null
           managers_count?: number
           mrr?: number
@@ -270,6 +273,7 @@ export type Database = {
           id: string
           joined_at: string | null
           live_hours: number
+          livepulse_id: string | null
           manager_id: string | null
           nickname: string
           platform: Database["public"]["Enums"]["host_platform"]
@@ -292,6 +296,7 @@ export type Database = {
           id?: string
           joined_at?: string | null
           live_hours?: number
+          livepulse_id?: string | null
           manager_id?: string | null
           nickname: string
           platform?: Database["public"]["Enums"]["host_platform"]
@@ -314,6 +319,7 @@ export type Database = {
           id?: string
           joined_at?: string | null
           live_hours?: number
+          livepulse_id?: string | null
           manager_id?: string | null
           nickname?: string
           platform?: Database["public"]["Enums"]["host_platform"]
@@ -340,6 +346,53 @@ export type Database = {
           },
         ]
       }
+      invitations: {
+        Row: {
+          agency_id: string
+          created_at: string
+          host_user_id: string
+          id: string
+          invited_by: string | null
+          livepulse_id: string
+          message: string | null
+          responded_at: string | null
+          status: Database["public"]["Enums"]["invitation_status"]
+          updated_at: string
+        }
+        Insert: {
+          agency_id: string
+          created_at?: string
+          host_user_id: string
+          id?: string
+          invited_by?: string | null
+          livepulse_id: string
+          message?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["invitation_status"]
+          updated_at?: string
+        }
+        Update: {
+          agency_id?: string
+          created_at?: string
+          host_user_id?: string
+          id?: string
+          invited_by?: string | null
+          livepulse_id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["invitation_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       managers: {
         Row: {
           agency_id: string
@@ -347,6 +400,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          livepulse_id: string | null
           name: string
           status: string
           team_size: number
@@ -360,6 +414,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          livepulse_id?: string | null
           name: string
           status?: string
           team_size?: number
@@ -373,6 +428,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          livepulse_id?: string | null
           name?: string
           status?: string
           team_size?: number
@@ -434,6 +490,51 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          currency: string
+          description: string | null
+          duration_days: number
+          id: string
+          max_hosts: number
+          max_managers: number
+          name: string
+          price_monthly: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          max_hosts?: number
+          max_managers?: number
+          name: string
+          price_monthly?: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_days?: number
+          id?: string
+          max_hosts?: number
+          max_managers?: number
+          name?: string
+          price_monthly?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           agency_id: string | null
@@ -443,8 +544,11 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          livepulse_id: string | null
           locale: string
           name: string | null
+          platform: string | null
+          platform_user_id: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -456,8 +560,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
+          livepulse_id?: string | null
           locale?: string
           name?: string | null
+          platform?: string | null
+          platform_user_id?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -469,8 +576,11 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          livepulse_id?: string | null
           locale?: string
           name?: string | null
+          platform?: string | null
+          platform_user_id?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -537,11 +647,16 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          activated_at: string | null
+          activated_by: string | null
           agency_id: string
           created_at: string
           currency: string
           current_period_end: string | null
           id: string
+          max_hosts: number | null
+          max_managers: number | null
+          payment_notes: string | null
           plan: Database["public"]["Enums"]["agency_plan"]
           price_monthly: number
           seats: number
@@ -550,11 +665,16 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          activated_at?: string | null
+          activated_by?: string | null
           agency_id: string
           created_at?: string
           currency?: string
           current_period_end?: string | null
           id?: string
+          max_hosts?: number | null
+          max_managers?: number | null
+          payment_notes?: string | null
           plan?: Database["public"]["Enums"]["agency_plan"]
           price_monthly?: number
           seats?: number
@@ -563,11 +683,16 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          activated_at?: string | null
+          activated_by?: string | null
           agency_id?: string
           created_at?: string
           currency?: string
           current_period_end?: string | null
           id?: string
+          max_hosts?: number | null
+          max_managers?: number | null
+          payment_notes?: string | null
           plan?: Database["public"]["Enums"]["agency_plan"]
           price_monthly?: number
           seats?: number
@@ -622,7 +747,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: { Args: { _invitation_id: string }; Returns: string }
+      confirm_subscription_payment: {
+        Args: { _notes?: string; _subscription_id: string }
+        Returns: undefined
+      }
       current_agency_id: { Args: never; Returns: string }
+      decline_invitation: {
+        Args: { _invitation_id: string }
+        Returns: undefined
+      }
+      generate_livepulse_id: { Args: { _prefix: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -641,9 +776,11 @@ export type Database = {
       goal_status: "active" | "completed" | "failed" | "cancelled"
       host_platform: "tiktok" | "kwai" | "bigo" | "other"
       host_status: "active" | "inactive" | "pending"
+      invitation_status: "pending" | "accepted" | "declined" | "cancelled"
       notification_type: "info" | "success" | "warning" | "danger"
       subscription_status:
         | "active"
+        | "awaiting_payment"
         | "trial"
         | "suspended"
         | "cancelled"
@@ -789,9 +926,11 @@ export const Constants = {
       goal_status: ["active", "completed", "failed", "cancelled"],
       host_platform: ["tiktok", "kwai", "bigo", "other"],
       host_status: ["active", "inactive", "pending"],
+      invitation_status: ["pending", "accepted", "declined", "cancelled"],
       notification_type: ["info", "success", "warning", "danger"],
       subscription_status: [
         "active",
+        "awaiting_payment",
         "trial",
         "suspended",
         "cancelled",
