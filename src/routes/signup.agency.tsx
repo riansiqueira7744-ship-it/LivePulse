@@ -27,6 +27,8 @@ function slugify(s: string) {
 function AgencySignup() {
   const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState<string | null>(null);
   const [f, setF] = useState({
     name: "", agencyName: "", email: "", password: "",
     whatsapp: "", country: "Brasil", city: "", planSlug: "anual",
@@ -36,13 +38,19 @@ function AgencySignup() {
   const set = (k: keyof typeof f) => (v: string) => setF((s) => ({ ...s, [k]: v }));
   const pw = checkPassword(f.password);
 
-  useEffect(() => {
-    supabase.from("plans").select("*").eq("active", true).order("sort_order")
-      .then(({ data }) => { if (data) setPlans(data as unknown as Plan[]); });
-  }, []);
+  const loadPlans = async () => {
+    setPlansLoading(true); setPlansError(null);
+    const { data, error } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
+    if (error) { setPlansError(error.message); setPlansLoading(false); return; }
+    setPlans((data ?? []) as unknown as Plan[]);
+    setPlansLoading(false);
+  };
+
+  useEffect(() => { void loadPlans(); }, []);
 
   const selected = plans.find((p) => p.slug === f.planSlug);
   const founderExhausted = plans.find((p) => p.slug === "founder" && p.license_limit && p.licenses_used >= p.license_limit);
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
