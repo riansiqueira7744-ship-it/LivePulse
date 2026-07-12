@@ -27,6 +27,8 @@ function slugify(s: string) {
 function AgencySignup() {
   const navigate = useNavigate();
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+  const [plansError, setPlansError] = useState<string | null>(null);
   const [f, setF] = useState({
     name: "", agencyName: "", email: "", password: "",
     whatsapp: "", country: "Brasil", city: "", planSlug: "anual",
@@ -36,13 +38,19 @@ function AgencySignup() {
   const set = (k: keyof typeof f) => (v: string) => setF((s) => ({ ...s, [k]: v }));
   const pw = checkPassword(f.password);
 
-  useEffect(() => {
-    supabase.from("plans").select("*").eq("active", true).order("sort_order")
-      .then(({ data }) => { if (data) setPlans(data as unknown as Plan[]); });
-  }, []);
+  const loadPlans = async () => {
+    setPlansLoading(true); setPlansError(null);
+    const { data, error } = await supabase.from("plans").select("*").eq("active", true).order("sort_order");
+    if (error) { setPlansError(error.message); setPlansLoading(false); return; }
+    setPlans((data ?? []) as unknown as Plan[]);
+    setPlansLoading(false);
+  };
+
+  useEffect(() => { void loadPlans(); }, []);
 
   const selected = plans.find((p) => p.slug === f.planSlug);
   const founderExhausted = plans.find((p) => p.slug === "founder" && p.license_limit && p.licenses_used >= p.license_limit);
+
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,15 +154,25 @@ function AgencySignup() {
 
             <TermsCheckbox value={terms} onChange={setTerms} />
 
-            <button type="submit" disabled={busy || !terms || !pw.valid} className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60">
-              {busy ? "Enviando…" : <>Solicitar Agência <ArrowRight className="h-4 w-4" /></>}
+            <button type="submit" disabled={busy || !terms || !pw.valid || !selected} className="mt-2 flex h-11 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90 disabled:opacity-60">
+              {busy ? "Enviando solicitação…" : <>Solicitar Agência <ArrowRight className="h-4 w-4" /></>}
             </button>
           </div>
 
           <div className="space-y-3">
             <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Escolha um plano</div>
-            {plans.length === 0 && <div className="text-xs text-muted-foreground">Carregando planos…</div>}
+            {plansLoading && <div className="text-xs text-muted-foreground">Carregando planos…</div>}
+            {plansError && !plansLoading && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
+                Não foi possível carregar os planos.
+                <button type="button" onClick={() => void loadPlans()} className="ml-2 rounded-md border border-destructive/40 px-2 py-0.5 text-[11px] font-semibold hover:bg-destructive/10">Tentar novamente</button>
+              </div>
+            )}
+            {!plansLoading && !plansError && plans.length === 0 && (
+              <div className="text-xs text-muted-foreground">Nenhum plano disponível no momento.</div>
+            )}
             {plans.map((p) => {
+
               const active = p.slug === f.planSlug;
               const isFounder = p.slug === "founder";
               const remaining = p.license_limit ? Math.max(0, p.license_limit - p.licenses_used) : null;
