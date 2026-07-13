@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RequestAgencyRouteImport } from './routes/request-agency'
 import { Route as PendingPaymentRouteImport } from './routes/pending-payment'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -50,6 +51,11 @@ const SignupRoute = SignupRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestAgencyRoute = RequestAgencyRouteImport.update({
+  id: '/request-agency',
+  path: '/request-agency',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PendingPaymentRoute = PendingPaymentRouteImport.update({
@@ -211,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/pending-payment': typeof PendingPaymentRoute
+  '/request-agency': typeof RequestAgencyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
@@ -243,6 +250,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/pending-payment': typeof PendingPaymentRoute
+  '/request-agency': typeof RequestAgencyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
@@ -278,6 +286,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/pending-payment': typeof PendingPaymentRoute
+  '/request-agency': typeof RequestAgencyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRouteWithChildren
   '/admin/agencies': typeof AdminAgenciesRoute
@@ -314,6 +323,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/pending-payment'
+    | '/request-agency'
     | '/reset-password'
     | '/signup'
     | '/admin/agencies'
@@ -346,6 +356,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/pending-payment'
+    | '/request-agency'
     | '/reset-password'
     | '/signup'
     | '/admin/agencies'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/pending-payment'
+    | '/request-agency'
     | '/reset-password'
     | '/signup'
     | '/admin/agencies'
@@ -415,6 +427,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PendingPaymentRoute: typeof PendingPaymentRoute
+  RequestAgencyRoute: typeof RequestAgencyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRouteWithChildren
 }
@@ -433,6 +446,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/request-agency': {
+      id: '/request-agency'
+      path: '/request-agency'
+      fullPath: '/request-agency'
+      preLoaderRoute: typeof RequestAgencyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pending-payment': {
@@ -727,19 +747,10 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PendingPaymentRoute: PendingPaymentRoute,
+  RequestAgencyRoute: RequestAgencyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
