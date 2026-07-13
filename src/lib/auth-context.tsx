@@ -44,9 +44,39 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-async function loadContext(userId: string, email: string): Promise<{ user: AuthUser; agency: CurrentAgency | null } | null> {
+type ProfileWithAgency = {
+  id: string;
+  name: string | null;
+  avatar_url: string | null;
+  agency_id: string | null;
+  whatsapp: string | null;
+  country: string | null;
+  city: string | null;
+  locale: string | null;
+  livepulse_id?: string | null;
+  agency: {
+    id: string;
+    name: string;
+    slug: string;
+    logo_url: string | null;
+    plan: string;
+    status: string;
+  } | null;
+};
+
+async function loadContext(
+  userId: string,
+  email: string,
+): Promise<{ user: AuthUser; agency: CurrentAgency | null } | null> {
+  // Single parallel batch: profile (with joined agency), roles, and owned agencies.
+  // The profile join covers managers/hosts whose agency comes from profiles.agency_id.
+  // The ownedAgencies query covers agency_owners whose agency_id may not be set on profile yet.
   const [{ data: profile }, { data: roles }, { data: ownedAgencies }] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("*, agency:agencies!agency_id(id,name,slug,logo_url,plan,status)")
+      .eq("id", userId)
+      .maybeSingle() as unknown as Promise<{ data: ProfileWithAgency | null; error: unknown }>,
     supabase.from("user_roles").select("role").eq("user_id", userId),
     supabase.from("agencies").select("id,name,slug,logo_url,plan,status").eq("owner_id", userId),
   ]);
@@ -61,29 +91,28 @@ async function loadContext(userId: string, email: string): Promise<{ user: AuthU
   if (!role && pendingAgency) role = "agency_pending";
   if (!role) role = "host"; // Fallback for auth users with no role.
 
+  const agencyId = profile?.agency_id ?? pendingAgency?.id ?? null;
+
   const user: AuthUser = {
     id: userId,
     email,
     name: profile?.name ?? email.split("@")[0],
     avatar_url: profile?.avatar_url ?? null,
     role,
-    livepulse_id: (profile as { livepulse_id?: string | null } | null)?.livepulse_id ?? null,
-    agency_id: profile?.agency_id ?? pendingAgency?.id ?? null,
+    livepulse_id: profile?.livepulse_id ?? null,
+    agency_id: agencyId,
     whatsapp: profile?.whatsapp ?? null,
     country: profile?.country ?? null,
     city: profile?.city ?? null,
     locale: profile?.locale ?? "pt-BR",
   };
 
+  // Resolve agency: prefer the joined profile agency, fall back to the pending-owner agency.
   let agency: CurrentAgency | null = null;
-  const agencyId = user.agency_id;
-  if (agencyId) {
-    const { data } = await supabase
-      .from("agencies")
-      .select("id,name,slug,logo_url,plan,status")
-      .eq("id", agencyId)
-      .maybeSingle();
-    if (data) agency = data as unknown as CurrentAgency;
+  if (profile?.agency) {
+    agency = profile.agency as CurrentAgency;
+  } else if (pendingAgency) {
+    agency = pendingAgency as unknown as CurrentAgency;
   }
 
   return { user, agency };
@@ -115,7 +144,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Defer async work to next tick to avoid deadlocks in the listener
       setTimeout(() => {
         if (event === "SIGNED_OUT") {
-          setSession(null); setUser(null); setAgency(null); setLoading(false);
+          setSession(null);
+          setUser(null);
+          setAgency(null);
+          setLoading(false);
           return;
         }
         void hydrate(s);
@@ -125,25 +157,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  const value = useMemo<AuthContextValue>(() => ({
-    user,
-    currentAgency: agency,
-    session,
-    loading,
-    isAuthenticated: !!user,
-    signOut: async () => { await supabase.auth.signOut(); },
-    refresh: async () => {
-      const { data } = await supabase.auth.getSession();
-      await hydrate(data.session);
-    },
-    canAccess: (path) => {
-      if (!user) return false;
-      const allowed = ROLE_ROUTES[user.role];
-      if (allowed.includes("*")) return true;
-      return allowed.some((p) => path === p || path.startsWith(p + "/"));
-    },
-    can: (permission) => !!user && ROLE_PERMISSIONS[user.role].includes(permission),
-  }), [user, agency, session, loading]);
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      currentAgency: agency,
+      session,
+      loading,
+      isAuthenticated: !!user,
+      signOut: async () => {
+        await supabase.auth.signOut();
+      },
+      refresh: async () => {
+        const { data } = await supabase.auth.getSession();
+        await hydrate(data.session);
+      },
+      canAccess: (path) => {
+        if (!user) return false;
+        const allowed = ROLE_ROUTES[user.role];
+        if (allowed.includes("*")) return true;
+        return allowed.some((p) => path === p || path.startsWith(p + "/"));
+      },
+      can: (permission) => !!user && ROLE_PERMISSIONS[user.role].includes(permission),
+    }),
+    [user, agency, session, loading],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
