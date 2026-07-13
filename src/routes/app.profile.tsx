@@ -70,9 +70,23 @@ function ProfilePage() {
     } finally { setSaving(false); }
   };
 
+  const canRequestAgency = user.role === "host";
+
   return (
     <div>
       <PageHeader title="Meu perfil" description="Suas informações pessoais" />
+      {canRequestAgency && (
+        <Link to="/request-agency" className="mb-6 flex items-center justify-between gap-4 rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/10 via-card to-card p-4 transition hover:-translate-y-0.5">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-primary/15 text-primary"><Building2 className="h-5 w-5" /></div>
+            <div>
+              <div className="text-sm font-semibold">Quero abrir minha Agência</div>
+              <div className="text-[11px] text-muted-foreground">Use sua conta atual. Sem novo cadastro.</div>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary">Solicitar <ArrowRight className="h-4 w-4" /></span>
+        </Link>
+      )}
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <Card className="text-center">
           <div className="mx-auto">
