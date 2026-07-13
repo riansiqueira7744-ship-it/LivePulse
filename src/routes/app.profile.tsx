@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Card, PageHeader } from "@/components/app-shell";
 import { Avatar } from "@/components/avatar";
 import { useAuth } from "@/lib/auth-context";
 import { profileService } from "@/services";
-import { Mail, Phone, MapPin, Upload, Trash2, Save } from "lucide-react";
+import { Mail, Phone, MapPin, Upload, Trash2, Save, Building2, ArrowRight } from "lucide-react";
 import { useState, useRef } from "react";
 import { ROLE_LABELS } from "@/lib/constants";
 
